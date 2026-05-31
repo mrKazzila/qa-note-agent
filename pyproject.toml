@@ -1,0 +1,129 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qa-note-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+authors = [{ name = "mrKazzila", email = "mrkazzila@gmail.com" }]
+
+
+dependencies = [
+    "pydantic>=2.13.3",
+    "pydantic-settings>=2.14.0",
+    "structlog>=25.5.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "ruff>=0.15.12",
+    "ty>=0.0.34",
+]
+
+[project.scripts]
+qa-note-agent = "qa_note_agent.entrypoints.cli.__main__:app"
+
+
+# ==========================
+# ========= PyTest =========
+# ==========================
+[tool.pytest.ini_options]
+addopts = "-v -ra --import-mode=importlib"
+testpaths = ["tests"]
+
+strict_markers = true
+strict_config = true
+
+
+# ==========================
+# ========= Ruff ===========
+# ==========================
+[tool.ruff]
+respect-gitignore = true
+line-length = 79
+target-version = "py313"
+src = ["src", "tests"]
+extend-exclude = []
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+select = [
+    "I",
+    "A",
+    "F",
+    "E",
+    "W",
+    "N",
+    "Q",
+    "UP",
+    "PT",
+    "C4",
+    "ERA",
+    "RET",
+    "ARG",
+    "PTH",
+    "FLY",
+    "ANN",
+    "COM",
+    "G001",
+]
+ignore = [
+    "ANN002",
+    "ANN003",
+    "ANN201",
+    "ANN202",
+    "ANN401",
+    "PT007",
+]
+
+[tool.ruff.format]
+skip-magic-trailing-comma = false
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = true
+combine-as-imports = true
+lines-between-types = 0
+known-first-party = ["qa_note_agent", "tests"]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
+multiline-quotes = "double"
+docstring-quotes = "double"
+
+
+
+# ==========================
+# ====== setuptools ========
+# ==========================
+[tool.setuptools.packages.find]
+where = ["src"]
+
+
+
+# ==========================
+# ====== Ty ========
+# ==========================
+[tool.ty.terminal]
+output-format = "concise"
+error-on-warning = false
+
+[tool.ty.environment]
+python-version = "3.13"
+root = ["./src"]
+
+[tool.ty.src]
+include = ["src", "tests"]
+exclude = [
+    ".venv/**",
+    "env/**",
+    "docs/**",
+]
