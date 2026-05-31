@@ -1,21 +1,30 @@
-from qa_note_agent.config.settings.logger import setup_logging, LoggingConfig
+from __future__ import annotations
 
-from qa_note_agent.presentation.cli.app import create_app
+from typing import TYPE_CHECKING
+
+from qa_note_agent.config.dependencies.cli import create_cli_app
+from qa_note_agent.config.dependencies.common import (
+    create_settings,
+    setup_app_logging,
+)
+
+if TYPE_CHECKING:
+    from typer import Typer
 
 
 def main() -> None:
     """Run CLI application."""
-    app = create_app()
+    app = _build_cli_app()
     app()
 
 
+def _build_cli_app() -> Typer:
+    """Build configured CLI application."""
+    settings = create_settings()
+    setup_app_logging(settings=settings)
+
+    return create_cli_app(settings=settings)
+
+
 if __name__ == "__main__":
-    setup_logging(
-        config=LoggingConfig(
-            level="INFO",
-            renderer="console",
-            enable_diagnostics=False,
-            use_utc_timestamps=True,
-        ),
-    )
     main()

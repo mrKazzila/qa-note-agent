@@ -126,7 +126,7 @@ def _configure_stdlib_logging(
         ],
     )
 
-    handler = logging.StreamHandler(stream=sys.stdout)
+    handler = logging.StreamHandler(stream=sys.stderr)
     handler.setFormatter(formatter)
 
     root = logging.getLogger()
