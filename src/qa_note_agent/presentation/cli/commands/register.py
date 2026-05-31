@@ -1,0 +1,15 @@
+import typer
+
+from qa_note_agent.presentation.cli.commands.registry import CLI_COMMANDS
+
+
+def register_commands(app: typer.Typer) -> None:
+    """Register CLI commands."""
+    [
+        app.command(
+            name=command.name,
+            help=command.help,
+            rich_help_panel=command.group.value,
+        )(command.command_func)
+        for command in CLI_COMMANDS
+    ]

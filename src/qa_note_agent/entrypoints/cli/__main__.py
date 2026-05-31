@@ -1,8 +1,12 @@
 from qa_note_agent.config.settings.logger import setup_logging, LoggingConfig
 
+from qa_note_agent.presentation.cli.app import create_app
 
-def app() -> None:
-    print("Hello world")
+
+def main() -> None:
+    """Run CLI application."""
+    app = create_app()
+    app()
 
 
 if __name__ == "__main__":
@@ -14,4 +18,4 @@ if __name__ == "__main__":
             use_utc_timestamps=True,
         ),
     )
-    app()
+    main()
