@@ -15,6 +15,7 @@ dependencies = [
     "pydantic>=2.13.3",
     "pydantic-settings>=2.14.0",
     "structlog>=25.5.0",
+    "typer>=0.26.4",
 ]
 
 [dependency-groups]
@@ -25,7 +26,7 @@ dev = [
 ]
 
 [project.scripts]
-qa-note-agent = "qa_note_agent.entrypoints.cli.__main__:app"
+qa-note-agent = "qa_note_agent.entrypoints.cli.__main__:main"
 
 
 # ==========================
