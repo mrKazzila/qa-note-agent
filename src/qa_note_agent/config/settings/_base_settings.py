@@ -23,5 +23,8 @@ _ENV_FILE_PATH = _find_project_root(start=Path(__file__)) / "env/.env"
 class BaseAppSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=_ENV_FILE_PATH,
+        env_file_encoding="utf-8",
+        env_prefix="QA_NOTE_AGENT_",
+        env_nested_delimiter="__",
         extra="allow",
     )

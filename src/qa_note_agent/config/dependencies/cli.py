@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from typing import assert_never
+
+from qa_note_agent.application.ports.llm import LlmClient
+from qa_note_agent.infrastructure.llm.ollama_client import OllamaLlmClient
+
 from qa_note_agent.application.services.diff_chunker import DiffChunker
 from qa_note_agent.application.use_cases.analyze_branch_changes import (
     AnalyzeBranchChangesUseCase,
@@ -44,17 +49,29 @@ def create_build_qa_note_context_chunks_use_case() -> BuildQaNoteContextChunksUs
         diff_chunker=DiffChunker(),
     )
 
+def create_llm_client(settings: Settings) -> LlmClient:
+    """Create LLM client from settings."""
+    match settings.llm.provider:
+        case "ollama":
+            ollama_settings = settings.llm.ollama
+
+            return OllamaLlmClient(
+                base_url=ollama_settings.base_url,
+                model=ollama_settings.model,
+                timeout_seconds=ollama_settings.timeout_seconds,
+                default_options=ollama_settings.default_options(),
+            )
+        case unknown:
+            assert_never(unknown)
+
 def create_generate_qa_note_use_case(
+    *,
+    settings: Settings,
     analyze_branch_changes_use_case: AnalyzeBranchChangesUseCase,
     build_qa_note_context_chunks_use_case: BuildQaNoteContextChunksUseCase,
 ) -> GenerateQaNoteUseCase:
     """Create generate QA note use case."""
-    llm_client = OllamaLlmClient(
-        default_options={
-            "temperature": 0.2,
-            "num_predict": 1200,
-        },
-    )
+    llm_client = create_llm_client(settings=settings)
 
     return GenerateQaNoteUseCase(
         analyze_branch_changes_use_case=analyze_branch_changes_use_case,
@@ -71,6 +88,7 @@ def create_cli_context(settings: Settings) -> CliContext:
         create_build_qa_note_context_chunks_use_case()
     )
     generate_qa_note_use_case = create_generate_qa_note_use_case(
+        settings=settings,
         analyze_branch_changes_use_case=analyze_branch_changes_use_case,
         build_qa_note_context_chunks_use_case=build_qa_note_context_chunks_use_case,
     )
