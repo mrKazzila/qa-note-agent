@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from time import perf_counter
+
+import structlog
 
 from qa_note_agent.application.ports.git import GitClient
 from qa_note_agent.domain.branch_changes import BranchChanges
@@ -11,6 +14,8 @@ from qa_note_agent.infrastructure.git.parsers import (
     parse_commits,
     parse_numstat_summary,
 )
+
+logger = structlog.get_logger(__name__)
 
 
 class CliGitClient(GitClient):
@@ -22,6 +27,7 @@ class CliGitClient(GitClient):
         base_ref: str,
         head_ref: str = "HEAD",
     ) -> BranchChanges:
+        started_at = perf_counter()
         merge_base = self._merge_base(
             repo_path=repo_path,
             base_ref=base_ref,
@@ -75,7 +81,7 @@ class CliGitClient(GitClient):
             f"{merge_base}...{head_ref}",
         )
 
-        return BranchChanges(
+        changes = BranchChanges(
             base_ref=base_ref,
             head_ref=head_ref,
             merge_base=merge_base,
@@ -85,6 +91,23 @@ class CliGitClient(GitClient):
             stat_raw=stat_raw,
             patch=patch,
         )
+
+        logger.info(
+            "git_branch_analyzed",
+            repo_path=str(repo_path),
+            base_ref=base_ref,
+            head_ref=head_ref,
+            merge_base=merge_base,
+            commit_count=len(changes.commits),
+            changed_files_count=changes.stats.files_changed,
+            insertions=changes.stats.insertions,
+            deletions=changes.stats.deletions,
+            binary_files=changes.stats.binary_files,
+            patch_size_bytes=len(changes.patch.encode("utf-8")),
+            duration_ms=round((perf_counter() - started_at) * 1000),
+        )
+
+        return changes
 
     def _merge_base(
         self,
@@ -101,12 +124,18 @@ class CliGitClient(GitClient):
             ["git", *args],
             cwd=repo_path,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=False,
         )
 
         if result.returncode != 0:
+            logger.error(
+                "git_command_failed",
+                repo_path=str(repo_path),
+                git_args=args,
+                returncode=result.returncode,
+                stderr=result.stderr.strip(),
+            )
             raise GitCommandError(
                 command=("git", *args),
                 stderr=result.stderr.strip(),

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from time import perf_counter
+
+import structlog
 
 from qa_note_agent.application.dtos.llm import LlmGenerateRequest
 from qa_note_agent.application.dtos.qa_note import QaNote
@@ -16,6 +19,8 @@ from qa_note_agent.application.use_cases.analyze_branch_changes import (
 from qa_note_agent.application.use_cases.build_qa_note_context_chunks import (
     BuildQaNoteContextChunksUseCase,
 )
+
+logger = structlog.get_logger(__name__)
 
 
 class GenerateQaNoteUseCase:
@@ -45,6 +50,21 @@ class GenerateQaNoteUseCase:
         map_num_predict: int = 800,
         reduce_num_predict: int = 1_400,
     ) -> QaNote:
+        started_at = perf_counter()
+        log = logger.bind(
+            repo_path=str(repo_path),
+            base_ref=base_ref,
+            head_ref=head_ref,
+        )
+        log.info(
+            "qa_note_generation_started",
+            max_chunk_chars=max_chunk_chars,
+            map_temperature=map_temperature,
+            reduce_temperature=reduce_temperature,
+            map_num_predict=map_num_predict,
+            reduce_num_predict=reduce_num_predict,
+        )
+
         changes = self._analyze_branch_changes_use_case.execute(
             repo_path=repo_path,
             base_ref=base_ref,
@@ -52,8 +72,17 @@ class GenerateQaNoteUseCase:
         )
 
         if changes.stats.files_changed == 0 and not changes.patch.strip():
+            duration_ms = round((perf_counter() - started_at) * 1000)
+            log.info(
+                "qa_note_generation_completed",
+                duration_ms=duration_ms,
+                changed_files_count=0,
+                chunk_count=0,
+                context_truncated=False,
+                used_llm=False,
+            )
             return QaNote(
-                content=_build_empty_changes_qa_note(
+                content=self._build_empty_changes_qa_note(
                     base_ref=base_ref,
                     head_ref=head_ref,
                 ),
@@ -99,12 +128,24 @@ class GenerateQaNoteUseCase:
             ),
         )
 
+        duration_ms = round((perf_counter() - started_at) * 1000)
+        log.info(
+            "qa_note_generation_completed",
+            duration_ms=duration_ms,
+            changed_files_count=changes.stats.files_changed,
+            chunk_count=len(chunk_set.chunks),
+            context_truncated=chunk_set.is_truncated,
+            partial_findings_count=len(partial_findings),
+            used_llm=True,
+        )
+
         return QaNote(
             content=final_response.text,
             chunks_count=len(chunk_set.chunks),
             was_context_truncated=chunk_set.is_truncated,
         )
 
+    @staticmethod
     def _build_empty_changes_qa_note(*, base_ref: str, head_ref: str) -> str:
         return "\n".join(
             (

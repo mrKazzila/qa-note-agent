@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import structlog
+
 from qa_note_agent.application.dtos.qa_note_context import (
     QaNoteContextChunk,
     QaNoteContextChunkSet,
 )
 from qa_note_agent.application.services.diff_chunker import DiffChunker
 from qa_note_agent.domain.branch_changes import BranchChanges
+
+logger = structlog.get_logger(__name__)
 
 
 class BuildQaNoteContextChunksUseCase:
@@ -39,6 +43,16 @@ class BuildQaNoteContextChunksUseCase:
         )
 
         if not diff_chunks:
+            logger.info(
+                "qa_note_context_chunked",
+                chunk_count=1,
+                max_chunk_chars=max_chunk_chars,
+                patch_budget=patch_budget,
+                changed_files_count=changes.stats.files_changed,
+                commit_count=len(changes.commits),
+                shared_context_truncated=is_shared_context_truncated,
+                patch_present=False,
+            )
             chunk = QaNoteContextChunk(
                 index=1,
                 total=1,
@@ -79,6 +93,17 @@ class BuildQaNoteContextChunksUseCase:
                     is_truncated=is_shared_context_truncated,
                 ),
             )
+
+        logger.info(
+            "qa_note_context_chunked",
+            chunk_count=total,
+            max_chunk_chars=max_chunk_chars,
+            patch_budget=patch_budget,
+            changed_files_count=changes.stats.files_changed,
+            commit_count=len(changes.commits),
+            shared_context_truncated=is_shared_context_truncated,
+            patch_present=True,
+        )
 
         return QaNoteContextChunkSet(
             chunks=tuple(chunks),

@@ -4,6 +4,9 @@ import json
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from time import perf_counter
+
+import structlog
 
 from qa_note_agent.application.dtos.llm import (
     LlmGenerateRequest,
@@ -11,6 +14,8 @@ from qa_note_agent.application.dtos.llm import (
 )
 from qa_note_agent.application.ports.llm import LlmClient
 from qa_note_agent.infrastructure.llm.errors import OllamaClientError
+
+logger = structlog.get_logger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +75,7 @@ class OllamaLlmClient(LlmClient):
         path: str,
         payload: dict[str, object],
     ) -> dict[str, object]:
+        started_at = perf_counter()
         url = self.base_url.rstrip("/") + path
         body = json.dumps(payload).encode("utf-8")
 
@@ -88,12 +94,37 @@ class OllamaLlmClient(LlmClient):
                 raw_body = response.read().decode("utf-8")
         except urllib.error.HTTPError as error:
             error_body = error.read().decode("utf-8", errors="replace")
+            logger.exception(
+                "ollama_request_failed",
+                model=self.model,
+                path=path,
+                timeout_seconds=self.timeout_seconds,
+                http_status=error.code,
+                error_body_preview=error_body[:500],
+                duration_ms=round((perf_counter() - started_at) * 1000),
+            )
             msg = f"Ollama request failed with HTTP {error.code}: {error_body}"
             raise OllamaClientError(msg) from error
         except urllib.error.URLError as error:
+            logger.exception(
+                "ollama_request_failed",
+                model=self.model,
+                path=path,
+                timeout_seconds=self.timeout_seconds,
+                reason=str(error.reason),
+                duration_ms=round((perf_counter() - started_at) * 1000),
+            )
             msg = f"Ollama request failed: {error.reason}"
             raise OllamaClientError(msg) from error
         except TimeoutError as error:
+            logger.exception(
+                "ollama_request_failed",
+                model=self.model,
+                path=path,
+                timeout_seconds=self.timeout_seconds,
+                reason="timeout",
+                duration_ms=round((perf_counter() - started_at) * 1000),
+            )
             msg = "Ollama request timed out."
             raise OllamaClientError(msg) from error
 
@@ -106,5 +137,14 @@ class OllamaLlmClient(LlmClient):
         if not isinstance(parsed, dict):
             msg = "Ollama returned non-object JSON response."
             raise OllamaClientError(msg)
+
+        logger.info(
+            "ollama_request_completed",
+            model=self.model,
+            path=path,
+            timeout_seconds=self.timeout_seconds,
+            response_size_bytes=len(raw_body.encode("utf-8")),
+            duration_ms=round((perf_counter() - started_at) * 1000),
+        )
 
         return parsed
