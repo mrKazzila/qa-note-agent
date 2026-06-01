@@ -40,15 +40,20 @@ class GenerateQaNoteUseCase:
         base_ref: str,
         head_ref: str = "HEAD",
         max_chunk_chars: int = 12_000,
+        map_temperature: float = 0.1,
+        reduce_temperature: float = 0.2,
+        map_num_predict: int = 800,
+        reduce_num_predict: int = 1_400,
     ) -> QaNote:
         changes = self._analyze_branch_changes_use_case.execute(
             repo_path=repo_path,
             base_ref=base_ref,
             head_ref=head_ref,
         )
+
         if changes.stats.files_changed == 0 and not changes.patch.strip():
             return QaNote(
-                content=self._build_empty_changes_qa_note(
+                content=_build_empty_changes_qa_note(
                     base_ref=base_ref,
                     head_ref=head_ref,
                 ),
@@ -70,6 +75,10 @@ class GenerateQaNoteUseCase:
                 LlmGenerateRequest(
                     system_prompt=QA_NOTE_SYSTEM_PROMPT,
                     prompt=prompt,
+                    options={
+                        "temperature": map_temperature,
+                        "num_predict": map_num_predict,
+                    },
                 )
             )
 
@@ -83,6 +92,10 @@ class GenerateQaNoteUseCase:
             LlmGenerateRequest(
                 system_prompt=QA_NOTE_SYSTEM_PROMPT,
                 prompt=final_prompt,
+                options={
+                    "temperature": reduce_temperature,
+                    "num_predict": reduce_num_predict,
+                },
             )
         )
 

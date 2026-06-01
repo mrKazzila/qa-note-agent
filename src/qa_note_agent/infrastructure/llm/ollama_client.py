@@ -18,23 +18,24 @@ class OllamaLlmClient(LlmClient):
     """LLM client implementation based on local Ollama API."""
 
     base_url: str = "http://localhost:11434"
-    # model: str = "qwen2.5-coder:7b"
     model: str = "qwen2.5"
     timeout_seconds: float = 120.0
+    default_options: dict[str, object] | None = None
 
     def generate(self, request: LlmGenerateRequest) -> LlmGenerateResponse:
         payload: dict[str, object] = {
             "model": self.model,
             "prompt": request.prompt,
             "stream": False,
-            "options": {
-                "temperature": 0.2,
-                "num_predict": 1200,
-            },
         }
 
         if request.system_prompt is not None:
             payload["system"] = request.system_prompt
+
+        options = self._merge_options(request.options)
+
+        if options:
+            payload["options"] = options
 
         response_data = self._post_json(
             path="/api/generate",
@@ -48,6 +49,20 @@ class OllamaLlmClient(LlmClient):
             raise OllamaClientError(msg)
 
         return LlmGenerateResponse(text=response_text.strip())
+
+    def _merge_options(
+        self,
+        request_options: dict[str, object] | None,
+    ) -> dict[str, object]:
+        options: dict[str, object] = {}
+
+        if self.default_options is not None:
+            options.update(self.default_options)
+
+        if request_options is not None:
+            options.update(request_options)
+
+        return options
 
     def _post_json(
         self,
