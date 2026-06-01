@@ -5,6 +5,9 @@ import typer
 from qa_note_agent.application.use_cases.analyze_branch_changes import (
     AnalyzeBranchChangesUseCase,
 )
+from qa_note_agent.application.use_cases.build_qa_note_context import (
+    BuildQaNoteContextUseCase,
+)
 from qa_note_agent.config.settings.base import Settings
 from qa_note_agent.infrastructure.git.cli_git_client import CliGitClient
 from qa_note_agent.presentation.cli.app import create_app
@@ -20,11 +23,17 @@ def create_analyze_branch_changes_use_case() -> AnalyzeBranchChangesUseCase:
     )
 
 
+def create_build_qa_note_context_use_case() -> BuildQaNoteContextUseCase:
+    """Create build QA note context use case."""
+    return BuildQaNoteContextUseCase()
+
+
 def create_cli_context(settings: Settings) -> CliContext:
     """Create CLI context."""
     return CliContext(
         settings=settings,
         analyze_branch_changes_use_case=create_analyze_branch_changes_use_case(),
+        build_qa_note_context_use_case=create_build_qa_note_context_use_case(),
     )
 
 

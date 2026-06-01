@@ -10,6 +10,9 @@ from qa_note_agent.presentation.cli.commands.analyze_branch import (
 )
 from qa_note_agent.presentation.cli.commands.hello import hello_command
 from qa_note_agent.presentation.cli.dependencies import CliContext
+from qa_note_agent.presentation.cli.commands.build_qa_context import (
+    create_build_qa_context_command,
+)
 
 
 CLICommandFunc = Callable[..., Any]
@@ -49,5 +52,11 @@ CLI_COMMANDS: tuple[CLICommandSpec, ...] = (
         command_factory=create_analyze_branch_command,
         help="Analyze local Git branch changes.",
         group=CLIGroup.GIT,
+    ),
+    CLICommandSpec(
+        name="build-context",
+        command_factory=create_build_qa_context_command,
+        help="Build LLM-ready context from local Git branch changes.",
+        group=CLIGroup.QA_NOTE,
     ),
 )
