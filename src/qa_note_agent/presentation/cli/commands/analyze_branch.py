@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import typer
 
 from qa_note_agent.presentation.cli.dependencies import CliContext
+from qa_note_agent.presentation.renderers.git_branch_changes import (
+    render_git_branch_changes,
+)
 
 
 CLICommandFunc = Callable[..., Any]
@@ -50,38 +54,12 @@ def create_analyze_branch_command(context: CliContext) -> CLICommandFunc:
             head_ref=head_ref,
         )
 
-        typer.echo(f"Repository: {repo_path}")
-        typer.echo(f"Base ref:   {changes.base_ref}")
-        typer.echo(f"Head ref:   {changes.head_ref}")
-        typer.echo(f"Merge base: {changes.merge_base}")
-        typer.echo()
+        output = render_git_branch_changes(
+            changes=changes,
+            repo_path=repo_path,
+            show_patch=show_patch,
+        )
 
-        typer.echo("Changed files:")
-        if changes.name_status_raw.strip():
-            typer.echo(changes.name_status_raw.rstrip())
-        else:
-            typer.echo("No changed files.")
-        typer.echo()
-
-        typer.echo("Stat:")
-        if changes.stat_raw.strip():
-            typer.echo(changes.stat_raw.rstrip())
-        else:
-            typer.echo("No diff stat.")
-        typer.echo()
-
-        typer.echo("Commits:")
-        if changes.commits_raw.strip():
-            typer.echo(changes.commits_raw.rstrip())
-        else:
-            typer.echo("No commits.")
-        typer.echo()
-
-        if show_patch:
-            typer.echo("Patch:")
-            if changes.patch.strip():
-                typer.echo(changes.patch.rstrip())
-            else:
-                typer.echo("No patch.")
+        typer.echo(output)
 
     return analyze_branch_command

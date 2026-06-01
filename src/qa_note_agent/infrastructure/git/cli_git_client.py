@@ -6,6 +6,11 @@ from pathlib import Path
 from qa_note_agent.application.ports.git import GitClient
 from qa_note_agent.domain.branch_changes import BranchChanges
 from qa_note_agent.infrastructure.git.errors import GitCommandError
+from qa_note_agent.infrastructure.git.parsers import (
+    parse_changed_files,
+    parse_commits,
+    parse_numstat_summary,
+)
 
 
 class CliGitClient(GitClient):
@@ -48,6 +53,7 @@ class CliGitClient(GitClient):
             "--no-color",
             "--no-ext-diff",
             "--numstat",
+            "-M",
             f"{merge_base}...{head_ref}",
         )
 
@@ -73,9 +79,9 @@ class CliGitClient(GitClient):
             base_ref=base_ref,
             head_ref=head_ref,
             merge_base=merge_base,
-            commits_raw=commits_raw,
-            name_status_raw=name_status_raw,
-            numstat_raw=numstat_raw,
+            commits=parse_commits(commits_raw),
+            changed_files=parse_changed_files(name_status_raw),
+            stats=parse_numstat_summary(numstat_raw),
             stat_raw=stat_raw,
             patch=patch,
         )
