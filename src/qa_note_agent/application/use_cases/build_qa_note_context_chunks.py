@@ -77,7 +77,7 @@ class BuildQaNoteContextChunksUseCase:
                     ),
                     files=diff_chunk.files,
                     is_truncated=is_shared_context_truncated,
-                )
+                ),
             )
 
         return QaNoteContextChunkSet(
@@ -121,7 +121,7 @@ def _render_branch_section(changes: BranchChanges) -> str:
             f"- Base ref: `{changes.base_ref}`",
             f"- Head ref: `{changes.head_ref}`",
             f"- Merge base: `{changes.merge_base}`",
-        )
+        ),
     )
 
 
@@ -164,7 +164,7 @@ def _render_changed_files_section(
 
             lines.append(
                 f"- `{changed_file.status}` `{changed_file.old_path}` "
-                f"→ `{changed_file.path}`{similarity}"
+                f"→ `{changed_file.path}`{similarity}",
             )
         else:
             lines.append(f"- `{changed_file.status}` `{changed_file.path}`")
@@ -215,7 +215,7 @@ def _render_no_patch_chunk_content(*, shared_context: str) -> str:
             shared_context,
             "## Patch",
             "No patch.",
-        )
+        ),
     )
 
 
@@ -237,7 +237,7 @@ def _render_chunk_content(
             _render_chunk_files_section(files),
             f"## Patch split mode\n\n`{split_reason}`",
             _render_patch_section(patch),
-        )
+        ),
     )
 
 
@@ -264,7 +264,7 @@ def _render_patch_section(patch: str) -> str:
                 "## Patch",
                 "",
                 "No patch.",
-            )
+            ),
         )
 
     return "\n".join(
@@ -274,7 +274,7 @@ def _render_patch_section(patch: str) -> str:
             "```diff",
             patch.rstrip(),
             "```",
-        )
+        ),
     )
 
 

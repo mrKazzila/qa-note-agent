@@ -1,6 +1,6 @@
 __all__ = ("Settings",)
 
-from typing import final, Literal
+from typing import Literal, final
 
 from pydantic import Field
 

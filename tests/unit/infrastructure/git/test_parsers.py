@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from qa_note_agent.domain.branch_changes import ChangedFile, ChangeStats, CommitInfo
+from qa_note_agent.domain.branch_changes import (
+    ChangedFile,
+    ChangeStats,
+    CommitInfo,
+)
 from qa_note_agent.infrastructure.git.parsers import (
     parse_changed_files,
     parse_commits,

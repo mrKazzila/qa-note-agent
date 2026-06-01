@@ -8,16 +8,17 @@ import typer
 
 from qa_note_agent.presentation.cli.dependencies import CliContext
 
-
 CLICommandFunc = Callable[..., Any]
 
 
-def create_build_qa_context_chunks_command(context: CliContext) -> CLICommandFunc:
+def create_build_qa_context_chunks_command(
+    context: CliContext,
+) -> CLICommandFunc:
     """Create command for building chunked QA note LLM context."""
 
     def build_qa_context_chunks_command(
         repo_path: Path = typer.Option(
-            Path("."),
+            Path(),
             "--repo",
             "-r",
             exists=True,
@@ -77,7 +78,7 @@ def create_build_qa_context_chunks_command(context: CliContext) -> CLICommandFun
                 files = ", ".join(chunk.files) if chunk.files else "no files"
                 typer.echo(
                     f"{chunk.index}/{chunk.total}: {chunk.title} "
-                    f"({len(chunk.content)} chars, files: {files})"
+                    f"({len(chunk.content)} chars, files: {files})",
                 )
 
             return

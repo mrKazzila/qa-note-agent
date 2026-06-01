@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from qa_note_agent.application.dtos.qa_note_context import QaNoteContextChunk
 
-
 QA_NOTE_SYSTEM_PROMPT = """\
 You are a senior QA analyst and software test engineer.
 

@@ -1,8 +1,7 @@
 from functools import lru_cache
 
 from qa_note_agent.config.settings.base import Settings
-from qa_note_agent.config.settings.logger import setup_logging, LoggingConfig
-
+from qa_note_agent.config.settings.logger import LoggingConfig, setup_logging
 
 
 @lru_cache(maxsize=1)

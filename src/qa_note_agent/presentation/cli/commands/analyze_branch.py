@@ -11,7 +11,6 @@ from qa_note_agent.presentation.renderers.git_branch_changes import (
     render_git_branch_changes,
 )
 
-
 CLICommandFunc = Callable[..., Any]
 
 
@@ -20,7 +19,7 @@ def create_analyze_branch_command(context: CliContext) -> CLICommandFunc:
 
     def analyze_branch_command(
         repo_path: Path = typer.Option(
-            Path("."),
+            Path(),
             "--repo",
             "-r",
             exists=True,

@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from typing import assert_never
+from typing import TYPE_CHECKING, assert_never
 
 from qa_note_agent.application.ports.llm import LlmClient
-from qa_note_agent.infrastructure.llm.ollama_client import OllamaLlmClient
-
 from qa_note_agent.application.services.diff_chunker import DiffChunker
 from qa_note_agent.application.use_cases.analyze_branch_changes import (
     AnalyzeBranchChangesUseCase,
@@ -29,6 +25,7 @@ from qa_note_agent.presentation.cli.dependencies import CliContext
 if TYPE_CHECKING:
     from typer import Typer
 
+
 def create_analyze_branch_changes_use_case() -> AnalyzeBranchChangesUseCase:
     """Create analyze branch changes use case."""
     git_client = CliGitClient()
@@ -43,11 +40,14 @@ def create_build_qa_note_context_use_case() -> BuildQaNoteContextUseCase:
     return BuildQaNoteContextUseCase()
 
 
-def create_build_qa_note_context_chunks_use_case() -> BuildQaNoteContextChunksUseCase:
+def create_build_qa_note_context_chunks_use_case() -> (
+    BuildQaNoteContextChunksUseCase
+):
     """Create build QA note context chunks use case."""
     return BuildQaNoteContextChunksUseCase(
         diff_chunker=DiffChunker(),
     )
+
 
 def create_llm_client(settings: Settings) -> LlmClient:
     """Create LLM client from settings."""
@@ -63,6 +63,7 @@ def create_llm_client(settings: Settings) -> LlmClient:
             )
         case unknown:
             assert_never(unknown)
+
 
 def create_generate_qa_note_use_case(
     *,
@@ -107,5 +108,3 @@ def create_cli_app(settings: Settings) -> Typer:
     context = create_cli_context(settings=settings)
 
     return create_app(context=context)
-
-

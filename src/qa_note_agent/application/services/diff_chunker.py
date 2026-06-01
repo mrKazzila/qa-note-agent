@@ -4,7 +4,6 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-
 SplitReason = Literal["file", "hunk", "hard"]
 
 
@@ -44,7 +43,7 @@ class DiffChunker:
                         content=file_patch.rstrip(),
                         files=(file_path,),
                         split_reason="file",
-                    )
+                    ),
                 )
                 continue
 
@@ -53,7 +52,7 @@ class DiffChunker:
                     file_patch=file_patch,
                     file_path=file_path,
                     max_chunk_chars=max_chunk_chars,
-                )
+                ),
             )
 
         return tuple(chunks)
@@ -119,7 +118,7 @@ def _split_large_file_patch(
                     content=(header + "".join(current_hunks)).rstrip(),
                     files=(file_path,),
                     split_reason="hunk",
-                )
+                ),
             )
             current_hunks = []
 
@@ -134,7 +133,7 @@ def _split_large_file_patch(
                 text=single_hunk_candidate,
                 file_path=file_path,
                 max_chunk_chars=max_chunk_chars,
-            )
+            ),
         )
 
     if current_hunks:
@@ -143,7 +142,7 @@ def _split_large_file_patch(
                 content=(header + "".join(current_hunks)).rstrip(),
                 files=(file_path,),
                 split_reason="hunk",
-            )
+            ),
         )
 
     return tuple(chunks)
@@ -209,7 +208,7 @@ def _hard_split_text(
                 content=marker + segment,
                 files=(file_path,),
                 split_reason="hard",
-            )
+            ),
         )
 
     return tuple(chunks)

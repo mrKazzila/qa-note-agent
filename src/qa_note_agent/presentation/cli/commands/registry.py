@@ -8,8 +8,6 @@ from typing import Any
 from qa_note_agent.presentation.cli.commands.analyze_branch import (
     create_analyze_branch_command,
 )
-from qa_note_agent.presentation.cli.commands.hello import hello_command
-from qa_note_agent.presentation.cli.dependencies import CliContext
 from qa_note_agent.presentation.cli.commands.build_qa_context import (
     create_build_qa_context_command,
 )
@@ -19,7 +17,8 @@ from qa_note_agent.presentation.cli.commands.build_qa_context_chunks import (
 from qa_note_agent.presentation.cli.commands.generate_qa_note import (
     create_generate_qa_note_command,
 )
-
+from qa_note_agent.presentation.cli.commands.hello import hello_command
+from qa_note_agent.presentation.cli.dependencies import CliContext
 
 CLICommandFunc = Callable[..., Any]
 CLICommandFactory = Callable[[CliContext], CLICommandFunc]

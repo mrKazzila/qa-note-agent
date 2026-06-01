@@ -6,7 +6,6 @@ from qa_note_agent.domain.branch_changes import (
     CommitInfo,
 )
 
-
 _COMMIT_RECORD_SEPARATOR = "\x1e"
 _COMMIT_FIELD_SEPARATOR = "\x1f"
 
@@ -36,7 +35,7 @@ def parse_commits(raw: str) -> tuple[CommitInfo, ...]:
                 date=date,
                 subject=subject,
                 body=body.strip(),
-            )
+            ),
         )
 
     return tuple(commits)
@@ -61,7 +60,7 @@ def parse_changed_files(raw: str) -> tuple[ChangedFile, ...]:
                     old_path=parts[1],
                     status="RENAMED",
                     similarity=_parse_similarity(status_raw),
-                )
+                ),
             )
             continue
 
@@ -72,7 +71,7 @@ def parse_changed_files(raw: str) -> tuple[ChangedFile, ...]:
                     old_path=parts[1],
                     status="COPIED",
                     similarity=_parse_similarity(status_raw),
-                )
+                ),
             )
             continue
 
@@ -83,7 +82,7 @@ def parse_changed_files(raw: str) -> tuple[ChangedFile, ...]:
             ChangedFile(
                 path=parts[1],
                 status=_map_status(status_raw),
-            )
+            ),
         )
 
     return tuple(files)

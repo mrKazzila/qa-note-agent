@@ -16,5 +16,5 @@ class GitCommandError(RuntimeError):
 
         command_text = " ".join(command)
         super().__init__(
-            f"Git command failed with exit code {returncode}: {command_text}\n{stderr}"
+            f"Git command failed with exit code {returncode}: {command_text}\n{stderr}",
         )

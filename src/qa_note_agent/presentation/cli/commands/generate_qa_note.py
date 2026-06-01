@@ -8,7 +8,6 @@ import typer
 
 from qa_note_agent.presentation.cli.dependencies import CliContext
 
-
 CLICommandFunc = Callable[..., Any]
 
 
@@ -17,7 +16,7 @@ def create_generate_qa_note_command(context: CliContext) -> CLICommandFunc:
 
     def generate_qa_note_command(
         repo_path: Path = typer.Option(
-            Path("."),
+            Path(),
             "--repo",
             "-r",
             exists=True,

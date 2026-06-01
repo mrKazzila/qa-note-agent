@@ -7,4 +7,3 @@ class LlmClientError(RuntimeError):
 
 class OllamaClientError(LlmClientError):
     """Raised when Ollama request fails."""
-    

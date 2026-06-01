@@ -79,7 +79,7 @@ class GenerateQaNoteUseCase:
                         "temperature": map_temperature,
                         "num_predict": map_num_predict,
                     },
-                )
+                ),
             )
 
             partial_findings.append(response.text)
@@ -96,7 +96,7 @@ class GenerateQaNoteUseCase:
                     "temperature": reduce_temperature,
                     "num_predict": reduce_num_predict,
                 },
-            )
+            ),
         )
 
         return QaNote(
@@ -127,5 +127,5 @@ class GenerateQaNoteUseCase:
                 "",
                 "## Notes",
                 "- Run with another `--base` value if this branch should contain changes.",
-            )
+            ),
         )

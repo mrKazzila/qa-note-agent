@@ -38,7 +38,7 @@ def _render_header(
             f"- Base ref: `{changes.base_ref}`",
             f"- Head ref: `{changes.head_ref}`",
             f"- Merge base: `{changes.merge_base}`",
-        )
+        ),
     )
 
 
@@ -61,7 +61,7 @@ def _render_summary(*, changes: BranchChanges) -> str:
                 "```text",
                 changes.stat_raw.rstrip(),
                 "```",
-            )
+            ),
         )
 
     return "\n".join(lines)
@@ -74,7 +74,7 @@ def _render_changed_files(*, changes: BranchChanges) -> str:
                 "## Changed files",
                 "",
                 "No changed files.",
-            )
+            ),
         )
 
     lines = [
@@ -89,7 +89,7 @@ def _render_changed_files(*, changes: BranchChanges) -> str:
                 suffix = f" ({file.similarity}%)"
 
             lines.append(
-                f"- `{file.status}` `{file.old_path}` → `{file.path}`{suffix}"
+                f"- `{file.status}` `{file.old_path}` → `{file.path}`{suffix}",
             )
         else:
             lines.append(f"- `{file.status}` `{file.path}`")
@@ -104,7 +104,7 @@ def _render_commits(*, changes: BranchChanges) -> str:
                 "## Commits",
                 "",
                 "No commits.",
-            )
+            ),
         )
 
     lines = [
@@ -114,7 +114,9 @@ def _render_commits(*, changes: BranchChanges) -> str:
 
     for commit in changes.commits:
         lines.append(f"- `{commit.sha[:8]}` {commit.subject}")
-        lines.append(f"  - Author: {commit.author_name} <{commit.author_email}>")
+        lines.append(
+            f"  - Author: {commit.author_name} <{commit.author_email}>",
+        )
         lines.append(f"  - Date: {commit.date}")
 
         if commit.body:
@@ -131,7 +133,7 @@ def _render_patch(*, changes: BranchChanges) -> str:
                 "## Patch",
                 "",
                 "No patch.",
-            )
+            ),
         )
 
     return "\n".join(
@@ -141,5 +143,5 @@ def _render_patch(*, changes: BranchChanges) -> str:
             "```diff",
             changes.patch.rstrip(),
             "```",
-        )
+        ),
     )

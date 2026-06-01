@@ -33,7 +33,9 @@ class BuildQaNoteContextUseCase:
             _render_patch_section(patch),
         ]
 
-        is_changed_files_truncated = len(changes.changed_files) > max_changed_files
+        is_changed_files_truncated = (
+            len(changes.changed_files) > max_changed_files
+        )
         is_commits_truncated = len(changes.commits) > max_commits
 
         return QaNoteContext(
@@ -56,7 +58,7 @@ def _render_branch_section(changes: BranchChanges) -> str:
             f"- Base ref: `{changes.base_ref}`",
             f"- Head ref: `{changes.head_ref}`",
             f"- Merge base: `{changes.merge_base}`",
-        )
+        ),
     )
 
 
@@ -99,7 +101,7 @@ def _render_changed_files_section(
 
             lines.append(
                 f"- `{changed_file.status}` `{changed_file.old_path}` "
-                f"→ `{changed_file.path}`{similarity}"
+                f"→ `{changed_file.path}`{similarity}",
             )
         else:
             lines.append(f"- `{changed_file.status}` `{changed_file.path}`")
@@ -150,7 +152,7 @@ def _render_patch_section(patch: str) -> str:
                 "## Patch",
                 "",
                 "No patch.",
-            )
+            ),
         )
 
     return "\n".join(
@@ -160,7 +162,7 @@ def _render_patch_section(patch: str) -> str:
             "```diff",
             patch.rstrip(),
             "```",
-        )
+        ),
     )
 
 

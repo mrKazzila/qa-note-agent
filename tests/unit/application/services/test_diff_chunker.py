@@ -105,7 +105,9 @@ index 1111111..2222222 100644
     assert len(chunks) > 1
     assert all(chunk.files == ("src/app.py",) for chunk in chunks)
     assert all(chunk.split_reason == "hard" for chunk in chunks)
-    assert all("split inside a large hunk" in chunk.content for chunk in chunks)
+    assert all(
+        "split inside a large hunk" in chunk.content for chunk in chunks
+    )
 
 
 def test_split_uses_unknown_file_for_non_git_diff_text() -> None:

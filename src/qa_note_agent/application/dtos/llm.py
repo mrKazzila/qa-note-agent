@@ -12,7 +12,6 @@ class LlmGenerateRequest:
     options: dict[str, object] | None = None
 
 
-
 @dataclass(frozen=True, slots=True)
 class LlmGenerateResponse:
     """LLM text generation response."""
