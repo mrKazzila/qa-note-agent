@@ -13,6 +13,9 @@ from qa_note_agent.presentation.cli.dependencies import CliContext
 from qa_note_agent.presentation.cli.commands.build_qa_context import (
     create_build_qa_context_command,
 )
+from qa_note_agent.presentation.cli.commands.build_qa_context_chunks import (
+    create_build_qa_context_chunks_command,
+)
 
 
 CLICommandFunc = Callable[..., Any]
@@ -57,6 +60,12 @@ CLI_COMMANDS: tuple[CLICommandSpec, ...] = (
         name="build-context",
         command_factory=create_build_qa_context_command,
         help="Build LLM-ready context from local Git branch changes.",
+        group=CLIGroup.QA_NOTE,
+    ),
+    CLICommandSpec(
+        name="build-context-chunks",
+        command_factory=create_build_qa_context_chunks_command,
+        help="Build chunked LLM-ready context from local Git branch changes.",
         group=CLIGroup.QA_NOTE,
     ),
 )
