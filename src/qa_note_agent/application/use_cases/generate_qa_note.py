@@ -46,6 +46,15 @@ class GenerateQaNoteUseCase:
             base_ref=base_ref,
             head_ref=head_ref,
         )
+        if changes.stats.files_changed == 0 and not changes.patch.strip():
+            return QaNote(
+                content=self._build_empty_changes_qa_note(
+                    base_ref=base_ref,
+                    head_ref=head_ref,
+                ),
+                chunks_count=0,
+                was_context_truncated=False,
+            )
 
         chunk_set = self._build_qa_note_context_chunks_use_case.execute(
             changes=changes,
@@ -81,4 +90,29 @@ class GenerateQaNoteUseCase:
             content=final_response.text,
             chunks_count=len(chunk_set.chunks),
             was_context_truncated=chunk_set.is_truncated,
+        )
+
+    def _build_empty_changes_qa_note(*, base_ref: str, head_ref: str) -> str:
+        return "\n".join(
+            (
+                "# For QA",
+                "",
+                "## Summary",
+                f"- No Git changes were detected between `{base_ref}` and `{head_ref}`.",
+                "",
+                "## What changed",
+                "- No changed files were found.",
+                "",
+                "## What to test",
+                "- No QA checks are required for this diff.",
+                "",
+                "## Regression risks",
+                "- No regression risks were detected because the diff is empty.",
+                "",
+                "## Edge cases",
+                "- Verify that the selected base ref is correct if changes were expected.",
+                "",
+                "## Notes",
+                "- Run with another `--base` value if this branch should contain changes.",
+            )
         )

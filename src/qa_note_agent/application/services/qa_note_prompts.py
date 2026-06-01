@@ -6,9 +6,17 @@ from qa_note_agent.application.dtos.qa_note_context import QaNoteContextChunk
 QA_NOTE_SYSTEM_PROMPT = """\
 You are a senior QA analyst and backend engineer.
 
-Your task is to analyze Git changes and produce practical QA notes.
-Be specific. Avoid generic advice. Do not invent behavior that is not supported
-by commits, changed files, or patch content.
+Your task is to analyze local Git branch changes and produce practical QA notes
+for manual and regression testing.
+
+Use only evidence from the provided Git context.
+Do not invent product behavior.
+Do not perform code review.
+Do not produce style, PEP8, import, formatting, or documentation checklists
+unless the diff directly changes linting, formatting, documentation tooling,
+or import behavior.
+
+Write concise, specific, test-oriented output.
 """
 
 
@@ -17,7 +25,7 @@ def build_chunk_analysis_prompt(chunk: QaNoteContextChunk) -> str:
     return f"""\
 Analyze this Git diff context chunk.
 
-Return findings in this exact structure:
+Return findings using exactly this structure:
 
 ## Chunk summary
 - ...
@@ -25,22 +33,23 @@ Return findings in this exact structure:
 ## Behavior changes
 - ...
 
-## Risky areas
+## QA-relevant risks
 - ...
 
-## Suggested QA checks
-- ...
-
-## Regression risks
+## Suggested checks
 - ...
 
 Rules:
-- Focus on what changed in this chunk.
-- Mention file paths when relevant.
-- If there are no meaningful QA implications, say so.
-- Do not write final release notes yet.
+- Focus only on this chunk.
+- Mention file paths when they help identify the affected area.
+- Prefer concrete behavior and integration risks over generic advice.
+- Do not include code blocks.
+- Do not include style, PEP8, import, formatting, or documentation checks unless directly relevant.
+- Do not write final QA notes.
+- If this chunk has no QA-relevant implications, say:
+  - No QA-relevant implications found in this chunk.
 
-Chunk:
+Git context chunk:
 
 {chunk.content}
 """
@@ -56,7 +65,7 @@ def build_final_qa_note_prompt(
     return f"""\
 Create the final QA note from these partial findings.
 
-Output in this structure:
+Output must use exactly this structure and no extra sections:
 
 # For QA
 
@@ -79,12 +88,19 @@ Output in this structure:
 - ...
 
 Rules:
-- Be concise but specific.
+- Analyze branch changes, not a single commit.
+- Be concise and specific.
 - Merge duplicate findings.
-- Prioritize user-visible behavior, backend behavior, data consistency,
-  integrations, configuration, migrations, and tests.
+- Prioritize behavior, CLI behavior, Git analysis behavior, LLM integration,
+  error handling, configuration, data flow, and user-visible command output.
+- Do not include code blocks.
+- Do not include "Detailed QA Checks".
+- Do not include "Notes on New Files".
+- Do not include explanations or meta commentary.
+- Do not include style, PEP8, import, formatting, or documentation checks unless directly relevant.
 - Do not mention chunks.
-- Do not invent changes that are not present in the findings.
+- Do not invent behavior that is not present in the findings.
+- If there are no meaningful QA implications, say so directly.
 
 Partial findings:
 

@@ -27,6 +27,10 @@ class OllamaLlmClient(LlmClient):
             "model": self.model,
             "prompt": request.prompt,
             "stream": False,
+            "options": {
+                "temperature": 0.2,
+                "num_predict": 1200,
+            },
         }
 
         if request.system_prompt is not None:

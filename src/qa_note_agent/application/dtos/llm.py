@@ -9,6 +9,8 @@ class LlmGenerateRequest:
 
     prompt: str
     system_prompt: str | None = None
+    options: dict[str, object] | None = None
+
 
 
 @dataclass(frozen=True, slots=True)
