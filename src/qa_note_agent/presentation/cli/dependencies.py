@@ -12,6 +12,9 @@ from qa_note_agent.config.settings.base import Settings
 from qa_note_agent.application.use_cases.build_qa_note_context_chunks import (
     BuildQaNoteContextChunksUseCase,
 )
+from qa_note_agent.application.use_cases.generate_qa_note import (
+    GenerateQaNoteUseCase,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,3 +26,5 @@ class CliContext:
     analyze_branch_changes_use_case: AnalyzeBranchChangesUseCase
     build_qa_note_context_use_case: BuildQaNoteContextUseCase
     build_qa_note_context_chunks_use_case: BuildQaNoteContextChunksUseCase
+    generate_qa_note_use_case: GenerateQaNoteUseCase
+

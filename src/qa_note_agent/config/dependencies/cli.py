@@ -16,6 +16,10 @@ from qa_note_agent.application.services.diff_chunker import DiffChunker
 from qa_note_agent.application.use_cases.build_qa_note_context_chunks import (
     BuildQaNoteContextChunksUseCase,
 )
+from qa_note_agent.application.use_cases.generate_qa_note import (
+    GenerateQaNoteUseCase,
+)
+from qa_note_agent.infrastructure.llm.ollama_client import OllamaLlmClient
 
 
 def create_analyze_branch_changes_use_case() -> AnalyzeBranchChangesUseCase:
@@ -38,14 +42,38 @@ def create_build_qa_note_context_chunks_use_case() -> BuildQaNoteContextChunksUs
         diff_chunker=DiffChunker(),
     )
 
+def create_generate_qa_note_use_case(
+    analyze_branch_changes_use_case: AnalyzeBranchChangesUseCase,
+    build_qa_note_context_chunks_use_case: BuildQaNoteContextChunksUseCase,
+) -> GenerateQaNoteUseCase:
+    """Create generate QA note use case."""
+    llm_client = OllamaLlmClient()
+
+    return GenerateQaNoteUseCase(
+        analyze_branch_changes_use_case=analyze_branch_changes_use_case,
+        build_qa_note_context_chunks_use_case=build_qa_note_context_chunks_use_case,
+        llm_client=llm_client,
+    )
+
 
 def create_cli_context(settings: Settings) -> CliContext:
     """Create CLI context."""
+    analyze_branch_changes_use_case = create_analyze_branch_changes_use_case()
+    build_qa_note_context_use_case = create_build_qa_note_context_use_case()
+    build_qa_note_context_chunks_use_case = (
+        create_build_qa_note_context_chunks_use_case()
+    )
+    generate_qa_note_use_case = create_generate_qa_note_use_case(
+        analyze_branch_changes_use_case=analyze_branch_changes_use_case,
+        build_qa_note_context_chunks_use_case=build_qa_note_context_chunks_use_case,
+    )
+
     return CliContext(
         settings=settings,
-        analyze_branch_changes_use_case=create_analyze_branch_changes_use_case(),
-        build_qa_note_context_use_case=create_build_qa_note_context_use_case(),
-        build_qa_note_context_chunks_use_case=create_build_qa_note_context_chunks_use_case(),
+        analyze_branch_changes_use_case=analyze_branch_changes_use_case,
+        build_qa_note_context_use_case=build_qa_note_context_use_case,
+        build_qa_note_context_chunks_use_case=build_qa_note_context_chunks_use_case,
+        generate_qa_note_use_case=generate_qa_note_use_case,
     )
 
 
