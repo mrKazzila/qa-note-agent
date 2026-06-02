@@ -7,6 +7,10 @@ from qa_note_agent.presentation.cli.commands.qa_note.options import (
     GenerateQANoteOptions as Options,
 )
 from qa_note_agent.presentation.cli.dependencies import CliContext
+from qa_note_agent.presentation.renderers.qa_note import (
+    render_qa_note_stdout,
+    render_qa_note_write_summary,
+)
 
 
 def create_generate_qa_note_command(context: CliContext) -> CLICommandFunc:
@@ -37,22 +41,18 @@ def create_generate_qa_note_command(context: CliContext) -> CLICommandFunc:
 
         if output_path is not None:
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(qa_note.content + "\n", encoding="utf-8")
+            output_path.write_text(
+                data=qa_note.content + "\n", encoding="utf-8"
+            )
 
-            typer.echo(f"QA note written to: {output_path}")
-            typer.echo(f"Chunks analyzed: {qa_note.chunks_count}")
-
-            if qa_note.was_context_truncated:
-                typer.echo("Context was truncated.")
-
+            typer.echo(
+                render_qa_note_write_summary(
+                    note=qa_note,
+                    output_path=output_path,
+                ),
+            )
             return
 
-        typer.echo(qa_note.content)
-        typer.echo()
-        typer.echo("---")
-        typer.echo(f"Chunks analyzed: {qa_note.chunks_count}")
-
-        if qa_note.was_context_truncated:
-            typer.echo("Context was truncated.")
+        typer.echo(render_qa_note_stdout(note=qa_note))
 
     return generate_qa_note_command

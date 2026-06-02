@@ -7,6 +7,9 @@ from qa_note_agent.presentation.cli.commands.qa_note.options import (
     BuildQAContextOptions as Options,
 )
 from qa_note_agent.presentation.cli.dependencies import CliContext
+from qa_note_agent.presentation.renderers.qa_note_context import (
+    render_qa_note_context,
+)
 
 
 def create_build_qa_context_command(context: CliContext) -> CLICommandFunc:
@@ -30,10 +33,6 @@ def create_build_qa_context_command(context: CliContext) -> CLICommandFunc:
             max_patch_chars=max_patch_chars,
         )
 
-        typer.echo(qa_context.content)
-
-        if qa_context.is_truncated:
-            typer.echo()
-            typer.echo("> Context was truncated.")
+        typer.echo(render_qa_note_context(context=qa_context))
 
     return build_qa_context_command

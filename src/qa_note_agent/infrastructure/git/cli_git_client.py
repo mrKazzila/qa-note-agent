@@ -116,7 +116,10 @@ class CliGitClient(GitClient):
         head_ref: str,
     ) -> str:
         return self._run_git(
-            repo_path, "merge-base", base_ref, head_ref,
+            repo_path,
+            "merge-base",
+            base_ref,
+            head_ref,
         ).strip()
 
     def _run_git(self, repo_path: Path, *args: str) -> str:

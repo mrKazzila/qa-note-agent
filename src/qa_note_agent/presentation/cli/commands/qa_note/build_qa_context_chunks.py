@@ -7,6 +7,11 @@ from qa_note_agent.presentation.cli.commands.qa_note.options import (
     BuildQAContextChunkOptions as Options,
 )
 from qa_note_agent.presentation.cli.dependencies import CliContext
+from qa_note_agent.presentation.renderers.qa_note_context_chunks import (
+    render_qa_note_context_chunk,
+    render_qa_note_context_chunk_list,
+    render_qa_note_context_chunks,
+)
 
 
 def create_build_qa_context_chunks_command(
@@ -35,17 +40,7 @@ def create_build_qa_context_chunks_command(
         )
 
         if list_only:
-            typer.echo(f"Chunks: {len(chunk_set.chunks)}")
-            typer.echo(f"Truncated: {chunk_set.is_truncated}")
-            typer.echo()
-
-            for chunk in chunk_set.chunks:
-                files = ", ".join(chunk.files) if chunk.files else "no files"
-                typer.echo(
-                    f"{chunk.index}/{chunk.total}: {chunk.title} "
-                    f"({len(chunk.content)} chars, files: {files})",
-                )
-
+            typer.echo(render_qa_note_context_chunk_list(chunk_set=chunk_set))
             return
 
         if chunk_index is not None:
@@ -65,19 +60,9 @@ def create_build_qa_context_chunks_command(
                 )
                 raise typer.BadParameter(msg)
 
-            typer.echo(selected_chunk.content)
+            typer.echo(render_qa_note_context_chunk(chunk=selected_chunk))
             return
 
-        for chunk in chunk_set.chunks:
-            typer.echo(chunk.content)
-
-            if chunk.index != chunk.total:
-                typer.echo()
-                typer.echo("---")
-                typer.echo()
-
-        if chunk_set.is_truncated:
-            typer.echo()
-            typer.echo("> Context was truncated.")
+        typer.echo(render_qa_note_context_chunks(chunk_set=chunk_set))
 
     return build_qa_context_chunks_command
