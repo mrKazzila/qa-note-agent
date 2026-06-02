@@ -13,7 +13,10 @@ from qa_note_agent.application.dtos.llm import (
     LlmGenerateResponse,
 )
 from qa_note_agent.application.ports.llm import LlmClient
-from qa_note_agent.infrastructure.llm.errors import OllamaClientError
+from qa_note_agent.infrastructure.llm.errors import (
+    LlmModelNotFoundError,
+    OllamaClientError,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -94,19 +97,28 @@ class OllamaLlmClient(LlmClient):
                 raw_body = response.read().decode("utf-8")
         except urllib.error.HTTPError as error:
             error_body = error.read().decode("utf-8", errors="replace")
-            logger.exception(
+            error_message = _extract_ollama_error_message(error_body)
+
+            if error.code == 404:
+                missing_model = _extract_missing_model(error_message)
+
+                if missing_model is not None:
+                    raise LlmModelNotFoundError(missing_model) from error
+
+            logger.warning(
                 "ollama_request_failed",
                 model=self.model,
                 path=path,
                 timeout_seconds=self.timeout_seconds,
                 http_status=error.code,
-                error_body_preview=error_body[:500],
+                error_message=error_message,
                 duration_ms=round((perf_counter() - started_at) * 1000),
             )
-            msg = f"Ollama request failed with HTTP {error.code}: {error_body}"
+
+            msg = f"Ollama request failed with HTTP {error.code}: {error_message}"
             raise OllamaClientError(msg) from error
         except urllib.error.URLError as error:
-            logger.exception(
+            logger.warning(
                 "ollama_request_failed",
                 model=self.model,
                 path=path,
@@ -114,10 +126,14 @@ class OllamaLlmClient(LlmClient):
                 reason=str(error.reason),
                 duration_ms=round((perf_counter() - started_at) * 1000),
             )
+
             msg = f"Ollama request failed: {error.reason}"
-            raise OllamaClientError(msg) from error
+            raise OllamaClientError(
+                msg,
+                hint="Check that Ollama is running and reachable.",
+            ) from error
         except TimeoutError as error:
-            logger.exception(
+            logger.warning(
                 "ollama_request_failed",
                 model=self.model,
                 path=path,
@@ -125,8 +141,11 @@ class OllamaLlmClient(LlmClient):
                 reason="timeout",
                 duration_ms=round((perf_counter() - started_at) * 1000),
             )
-            msg = "Ollama request timed out."
-            raise OllamaClientError(msg) from error
+
+            raise OllamaClientError(
+                "Ollama request timed out.",
+                hint="Try increasing the Ollama timeout or using a smaller/faster model.",
+            ) from error
 
         try:
             parsed = json.loads(raw_body)
@@ -148,3 +167,28 @@ class OllamaLlmClient(LlmClient):
         )
 
         return parsed
+
+def _extract_ollama_error_message(error_body: str) -> str:
+    try:
+        parsed = json.loads(error_body)
+    except json.JSONDecodeError:
+        return error_body
+
+    error_message = parsed.get("error")
+
+    if isinstance(error_message, str):
+        return error_message
+
+    return error_body
+
+def _extract_missing_model(error_message: str) -> str | None:
+    prefix = "model '"
+    suffix = "' not found"
+
+    if not error_message.startswith(prefix):
+        return None
+
+    if not error_message.endswith(suffix):
+        return None
+
+    return error_message.removeprefix(prefix).removesuffix(suffix)

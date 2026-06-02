@@ -24,6 +24,8 @@ def _create_typer_app(context: CliContext) -> typer.Typer:
         rich_markup_mode=rich_markup_mode,
         add_completion=True,
         no_args_is_help=True,
+        pretty_exceptions_enable=False,
+        pretty_exceptions_show_locals=False,
     )
 
 

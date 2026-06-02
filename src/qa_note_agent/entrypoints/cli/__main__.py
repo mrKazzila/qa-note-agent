@@ -7,15 +7,17 @@ from qa_note_agent.config.dependencies.common import (
     create_settings,
     setup_app_logging,
 )
+from qa_note_agent.presentation.cli.error_handling import handle_errors
 
 if TYPE_CHECKING:
     from typer import Typer
 
 
+@handle_errors
 def main() -> None:
     """Run CLI application."""
     app = _build_cli_app()
-    app()
+    app(standalone_mode=False)
 
 
 def _build_cli_app() -> Typer:
