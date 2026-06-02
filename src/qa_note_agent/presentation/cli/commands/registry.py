@@ -5,19 +5,18 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from qa_note_agent.presentation.cli.commands.analyze_branch import (
+from qa_note_agent.presentation.cli.commands.git.analyze_branch import (
     create_analyze_branch_command,
 )
-from qa_note_agent.presentation.cli.commands.build_qa_context import (
+from qa_note_agent.presentation.cli.commands.qa_note.build_qa_context import (
     create_build_qa_context_command,
 )
-from qa_note_agent.presentation.cli.commands.build_qa_context_chunks import (
+from qa_note_agent.presentation.cli.commands.qa_note.build_qa_context_chunks import (
     create_build_qa_context_chunks_command,
 )
-from qa_note_agent.presentation.cli.commands.generate_qa_note import (
+from qa_note_agent.presentation.cli.commands.qa_note.generate_qa_note import (
     create_generate_qa_note_command,
 )
-from qa_note_agent.presentation.cli.commands.hello import hello_command
 from qa_note_agent.presentation.cli.dependencies import CliContext
 
 CLICommandFunc = Callable[..., Any]
@@ -40,18 +39,7 @@ class CLICommandSpec:
     group: CLIGroup = CLIGroup.GENERAL
 
 
-def create_hello_command(_: CliContext) -> CLICommandFunc:
-    """Create hello command."""
-    return hello_command
-
-
 CLI_COMMANDS: tuple[CLICommandSpec, ...] = (
-    CLICommandSpec(
-        name="hello",
-        command_factory=create_hello_command,
-        help="Print hello message.",
-        group=CLIGroup.GENERAL,
-    ),
     CLICommandSpec(
         name="analyze-branch",
         command_factory=create_analyze_branch_command,

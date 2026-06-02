@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-from pathlib import Path
-from typing import Any
-
 import typer
 
+from qa_note_agent.presentation.cli.commands.common.types import CLICommandFunc
+from qa_note_agent.presentation.cli.commands.qa_note.options import (
+    BuildQAContextChunkOptions as Options,
+)
 from qa_note_agent.presentation.cli.dependencies import CliContext
-
-CLICommandFunc = Callable[..., Any]
 
 
 def create_build_qa_context_chunks_command(
@@ -17,45 +15,12 @@ def create_build_qa_context_chunks_command(
     """Create command for building chunked QA note LLM context."""
 
     def build_qa_context_chunks_command(
-        repo_path: Path = typer.Option(
-            Path(),
-            "--repo",
-            "-r",
-            exists=True,
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            resolve_path=True,
-            help="Path to local Git repository.",
-        ),
-        base_ref: str = typer.Option(
-            "origin/main",
-            "--base",
-            "-b",
-            help="Base Git ref to compare against.",
-        ),
-        head_ref: str = typer.Option(
-            "HEAD",
-            "--head",
-            help="Head Git ref to analyze.",
-        ),
-        max_chunk_chars: int = typer.Option(
-            12_000,
-            "--max-chunk-chars",
-            min=2_000,
-            help="Maximum number of characters per context chunk.",
-        ),
-        chunk_index: int | None = typer.Option(
-            None,
-            "--chunk",
-            min=1,
-            help="Print only one chunk by 1-based index.",
-        ),
-        list_only: bool = typer.Option(
-            False,
-            "--list",
-            help="Print chunk list without full content.",
-        ),
+        repo_path: Options.repo_path.annotation = Options.repo_path.default,
+        base_ref: Options.base_ref.annotation = Options.base_ref.default,
+        head_ref: Options.head_ref.annotation = Options.head_ref.default,
+        max_chunk_chars: Options.max_chunk_chars.annotation = Options.max_chunk_chars.default,
+        chunk_index: Options.chunk_index.annotation = Options.chunk_index.default,
+        list_only: Options.list_only.annotation = Options.list_only.default,
     ) -> None:
         """Build chunked LLM-ready context from local Git branch changes."""
         changes = context.analyze_branch_changes_use_case.execute(
