@@ -72,6 +72,7 @@ The project uses:
 * Pydantic Settings for configuration;
 * local Git CLI integration;
 * Ollama for local LLM generation;
+* Langfuse for optional tracing and observability;
 * pytest for tests;
 * layered architecture;
 * ports and adapters;
@@ -89,7 +90,7 @@ application/
   Use cases, ports, DTOs, prompt builders, and diff chunking.
 
 infrastructure/
-  Git and LLM adapters.
+  Git, LLM, and tracing adapters.
 
 presentation/
   CLI commands and human-readable renderers.
@@ -140,7 +141,21 @@ QA_NOTE_AGENT_LLM__OLLAMA__MODEL=qwen2.5-coder:7b
 QA_NOTE_AGENT_LLM__OLLAMA__TIMEOUT_SECONDS=120
 QA_NOTE_AGENT_LLM__OLLAMA__TEMPERATURE=0.2
 QA_NOTE_AGENT_LLM__OLLAMA__NUM_PREDICT=1200
+
+QA_NOTE_AGENT_LANGFUSE__ENABLED=true
+QA_NOTE_AGENT_LANGFUSE__PUBLIC_KEY=pk-lf-...
+QA_NOTE_AGENT_LANGFUSE__SECRET_KEY=sk-lf-...
+QA_NOTE_AGENT_LANGFUSE__BASE_URL=https://cloud.langfuse.com
+QA_NOTE_AGENT_LANGFUSE__ENVIRONMENT=local
+QA_NOTE_AGENT_LANGFUSE__SAMPLE_RATE=1.0
+QA_NOTE_AGENT_LANGFUSE__DEBUG=false
 ```
+
+Langfuse is optional. If `QA_NOTE_AGENT_LANGFUSE__PUBLIC_KEY` and
+`QA_NOTE_AGENT_LANGFUSE__SECRET_KEY` are not set, tracing stays disabled.
+When configured, the `generate` command creates a parent trace for the
+QA-note run and nested generation observations for each Ollama call, then
+flushes the trace before the CLI exits.
 
 ### 3. Analyze branch changes
 
@@ -216,4 +231,3 @@ qa-note-agent generate --repo . --base origin/main --head HEAD
 This compares the current branch against `origin/main` using Git merge-base logic.
 
 If no committed changes are detected, the tool returns an empty-diff QA note without calling the LLM.
-

@@ -13,6 +13,7 @@ authors = [{ name = "mrKazzila", email = "mrkazzila@gmail.com" }]
 
 dependencies = [
     "click>=8.4.1",
+    "langfuse>=4.7.1",
     "pydantic>=2.13.3",
     "pydantic-settings>=2.14.0",
     "structlog>=25.5.0",

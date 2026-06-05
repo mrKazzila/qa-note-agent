@@ -8,6 +8,7 @@ import structlog
 from qa_note_agent.application.dtos.llm import LlmGenerateRequest
 from qa_note_agent.application.dtos.qa_note import QaNote
 from qa_note_agent.application.ports.llm import LlmClient
+from qa_note_agent.application.ports.tracing import NullTracer, Tracer
 from qa_note_agent.application.services.qa_note_prompts import (
     QA_NOTE_SYSTEM_PROMPT,
     build_chunk_analysis_prompt,
@@ -31,12 +32,14 @@ class GenerateQaNoteUseCase:
         analyze_branch_changes_use_case: AnalyzeBranchChangesUseCase,
         build_qa_note_context_chunks_use_case: BuildQaNoteContextChunksUseCase,
         llm_client: LlmClient,
+        tracer: Tracer = NullTracer(),
     ) -> None:
         self._analyze_branch_changes_use_case = analyze_branch_changes_use_case
         self._build_qa_note_context_chunks_use_case = (
             build_qa_note_context_chunks_use_case
         )
         self._llm_client = llm_client
+        self._tracer = tracer
 
     def execute(
         self,
@@ -51,99 +54,146 @@ class GenerateQaNoteUseCase:
         reduce_num_predict: int = 1_400,
     ) -> QaNote:
         started_at = perf_counter()
-        log = logger.bind(
+        base_log = logger.bind(
             repo_path=str(repo_path),
             base_ref=base_ref,
             head_ref=head_ref,
         )
-        log.info(
-            "qa_note_generation_started",
-            max_chunk_chars=max_chunk_chars,
-            map_temperature=map_temperature,
-            reduce_temperature=reduce_temperature,
-            map_num_predict=map_num_predict,
-            reduce_num_predict=reduce_num_predict,
-        )
 
-        changes = self._analyze_branch_changes_use_case.execute(
-            repo_path=repo_path,
-            base_ref=base_ref,
-            head_ref=head_ref,
-        )
+        try:
+            with self._tracer.start_span(
+                name="qa-note.generate",
+                input_data={
+                    "repo_path": str(repo_path),
+                    "base_ref": base_ref,
+                    "head_ref": head_ref,
+                },
+                metadata={
+                    "max_chunk_chars": max_chunk_chars,
+                    "map_temperature": map_temperature,
+                    "reduce_temperature": reduce_temperature,
+                    "map_num_predict": map_num_predict,
+                    "reduce_num_predict": reduce_num_predict,
+                },
+            ) as trace:
+                log = base_log.bind(
+                    langfuse_trace_id=self._tracer.get_current_trace_id(),
+                    langfuse_trace_url=self._tracer.get_current_trace_url(),
+                )
+                log.info(
+                    "qa_note_generation_started",
+                    max_chunk_chars=max_chunk_chars,
+                    map_temperature=map_temperature,
+                    reduce_temperature=reduce_temperature,
+                    map_num_predict=map_num_predict,
+                    reduce_num_predict=reduce_num_predict,
+                )
 
-        if changes.stats.files_changed == 0 and not changes.patch.strip():
-            duration_ms = round((perf_counter() - started_at) * 1000)
-            log.info(
-                "qa_note_generation_completed",
-                duration_ms=duration_ms,
-                changed_files_count=0,
-                chunk_count=0,
-                context_truncated=False,
-                used_llm=False,
-            )
-            return QaNote(
-                content=self._build_empty_changes_qa_note(
+                changes = self._analyze_branch_changes_use_case.execute(
+                    repo_path=repo_path,
                     base_ref=base_ref,
                     head_ref=head_ref,
-                ),
-                chunks_count=0,
-                was_context_truncated=False,
-            )
+                )
 
-        chunk_set = self._build_qa_note_context_chunks_use_case.execute(
-            changes=changes,
-            max_chunk_chars=max_chunk_chars,
-        )
+                if (
+                    changes.stats.files_changed == 0
+                    and not changes.patch.strip()
+                ):
+                    qa_note = QaNote(
+                        content=self._build_empty_changes_qa_note(
+                            base_ref=base_ref,
+                            head_ref=head_ref,
+                        ),
+                        chunks_count=0,
+                        was_context_truncated=False,
+                    )
+                    duration_ms = round((perf_counter() - started_at) * 1000)
+                    trace.update(
+                        output={
+                            "changed_files_count": 0,
+                            "chunk_count": 0,
+                            "context_truncated": False,
+                            "used_llm": False,
+                        },
+                    )
+                    log.info(
+                        "qa_note_generation_completed",
+                        duration_ms=duration_ms,
+                        changed_files_count=0,
+                        chunk_count=0,
+                        context_truncated=False,
+                        used_llm=False,
+                    )
+                    return qa_note
 
-        partial_findings: list[str] = []
+                chunk_set = (
+                    self._build_qa_note_context_chunks_use_case.execute(
+                        changes=changes,
+                        max_chunk_chars=max_chunk_chars,
+                    )
+                )
 
-        for chunk in chunk_set.chunks:
-            prompt = build_chunk_analysis_prompt(chunk)
+                partial_findings: list[str] = []
 
-            response = self._llm_client.generate(
-                LlmGenerateRequest(
-                    system_prompt=QA_NOTE_SYSTEM_PROMPT,
-                    prompt=prompt,
-                    options={
-                        "temperature": map_temperature,
-                        "num_predict": map_num_predict,
+                for chunk in chunk_set.chunks:
+                    prompt = build_chunk_analysis_prompt(chunk)
+
+                    response = self._llm_client.generate(
+                        LlmGenerateRequest(
+                            system_prompt=QA_NOTE_SYSTEM_PROMPT,
+                            prompt=prompt,
+                            options={
+                                "temperature": map_temperature,
+                                "num_predict": map_num_predict,
+                            },
+                        ),
+                    )
+
+                    partial_findings.append(response.text)
+
+                final_prompt = build_final_qa_note_prompt(
+                    partial_findings=tuple(partial_findings),
+                )
+
+                final_response = self._llm_client.generate(
+                    LlmGenerateRequest(
+                        system_prompt=QA_NOTE_SYSTEM_PROMPT,
+                        prompt=final_prompt,
+                        options={
+                            "temperature": reduce_temperature,
+                            "num_predict": reduce_num_predict,
+                        },
+                    ),
+                )
+
+                qa_note = QaNote(
+                    content=final_response.text,
+                    chunks_count=len(chunk_set.chunks),
+                    was_context_truncated=chunk_set.is_truncated,
+                )
+                duration_ms = round((perf_counter() - started_at) * 1000)
+                trace.update(
+                    output={
+                        "changed_files_count": changes.stats.files_changed,
+                        "chunk_count": len(chunk_set.chunks),
+                        "context_truncated": chunk_set.is_truncated,
+                        "partial_findings_count": len(partial_findings),
+                        "used_llm": True,
                     },
-                ),
-            )
+                )
+                log.info(
+                    "qa_note_generation_completed",
+                    duration_ms=duration_ms,
+                    changed_files_count=changes.stats.files_changed,
+                    chunk_count=len(chunk_set.chunks),
+                    context_truncated=chunk_set.is_truncated,
+                    partial_findings_count=len(partial_findings),
+                    used_llm=True,
+                )
 
-            partial_findings.append(response.text)
-
-        final_prompt = build_final_qa_note_prompt(
-            partial_findings=tuple(partial_findings),
-        )
-
-        final_response = self._llm_client.generate(
-            LlmGenerateRequest(
-                system_prompt=QA_NOTE_SYSTEM_PROMPT,
-                prompt=final_prompt,
-                options={
-                    "temperature": reduce_temperature,
-                    "num_predict": reduce_num_predict,
-                },
-            ),
-        )
-
-        duration_ms = round((perf_counter() - started_at) * 1000)
-        log.info(
-            "qa_note_generation_completed",
-            duration_ms=duration_ms,
-            changed_files_count=changes.stats.files_changed,
-            chunk_count=len(chunk_set.chunks),
-            context_truncated=chunk_set.is_truncated,
-            partial_findings_count=len(partial_findings),
-            used_llm=True,
-        )
-
-        return QaNote(
-            content=final_response.text,
-            chunks_count=len(chunk_set.chunks),
-            was_context_truncated=chunk_set.is_truncated,
-        )
+                return qa_note
+        finally:
+            self._tracer.flush()
 
     @staticmethod
     def _build_empty_changes_qa_note(*, base_ref: str, head_ref: str) -> str:
@@ -152,7 +202,10 @@ class GenerateQaNoteUseCase:
                 "# For QA",
                 "",
                 "## Summary",
-                f"- No Git changes were detected between `{base_ref}` and `{head_ref}`.",
+                (
+                    f"- No Git changes were detected between `{base_ref}` and "
+                    f"`{head_ref}`."
+                ),
                 "",
                 "## What changed",
                 "- No changed files were found.",
@@ -161,12 +214,18 @@ class GenerateQaNoteUseCase:
                 "- No QA checks are required for this diff.",
                 "",
                 "## Regression risks",
-                "- No regression risks were detected because the diff is empty.",
+                (
+                    "- No regression risks were detected because the diff is "
+                    "empty."
+                ),
                 "",
                 "## Edge cases",
-                "- Verify that the selected base ref is correct if changes were expected.",
+                ("- Verify the selected base ref if changes were expected."),
                 "",
                 "## Notes",
-                "- Run with another `--base` value if this branch should contain changes.",
+                (
+                    "- Run with another `--base` value if this branch should "
+                    "contain changes."
+                ),
             ),
         )

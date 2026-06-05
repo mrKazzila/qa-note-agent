@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, assert_never
 
 from qa_note_agent.application.ports.llm import LlmClient
+from qa_note_agent.application.ports.tracing import Tracer
 from qa_note_agent.application.services.diff_chunker import DiffChunker
 from qa_note_agent.application.use_cases.analyze_branch_changes import (
     AnalyzeBranchChangesUseCase,
@@ -19,6 +20,7 @@ from qa_note_agent.application.use_cases.generate_qa_note import (
 from qa_note_agent.config.settings.base import Settings
 from qa_note_agent.infrastructure.git.cli_git_client import CliGitClient
 from qa_note_agent.infrastructure.llm.ollama_client import OllamaLlmClient
+from qa_note_agent.infrastructure.tracing import create_tracer
 from qa_note_agent.presentation.cli.app import create_app
 from qa_note_agent.presentation.cli.dependencies import CliContext
 
@@ -49,7 +51,7 @@ def create_build_qa_note_context_chunks_use_case() -> (
     )
 
 
-def create_llm_client(settings: Settings) -> LlmClient:
+def create_llm_client(settings: Settings, *, tracer: Tracer) -> LlmClient:
     """Create LLM client from settings."""
     match settings.llm.provider:
         case "ollama":
@@ -60,6 +62,7 @@ def create_llm_client(settings: Settings) -> LlmClient:
                 model=ollama_settings.model,
                 timeout_seconds=ollama_settings.timeout_seconds,
                 default_options=ollama_settings.default_options(),
+                tracer=tracer,
             )
         case unknown:
             assert_never(unknown)
@@ -72,12 +75,14 @@ def create_generate_qa_note_use_case(
     build_qa_note_context_chunks_use_case: BuildQaNoteContextChunksUseCase,
 ) -> GenerateQaNoteUseCase:
     """Create generate QA note use case."""
-    llm_client = create_llm_client(settings=settings)
+    tracer = create_tracer(settings.langfuse)
+    llm_client = create_llm_client(settings=settings, tracer=tracer)
 
     return GenerateQaNoteUseCase(
         analyze_branch_changes_use_case=analyze_branch_changes_use_case,
         build_qa_note_context_chunks_use_case=build_qa_note_context_chunks_use_case,
         llm_client=llm_client,
+        tracer=tracer,
     )
 
 

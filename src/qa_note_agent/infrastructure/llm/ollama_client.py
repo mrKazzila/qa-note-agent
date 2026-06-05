@@ -5,6 +5,7 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from time import perf_counter
+from typing import Any
 
 import structlog
 
@@ -13,6 +14,7 @@ from qa_note_agent.application.dtos.llm import (
     LlmGenerateResponse,
 )
 from qa_note_agent.application.ports.llm import LlmClient
+from qa_note_agent.application.ports.tracing import NullTracer, Tracer
 from qa_note_agent.infrastructure.llm.errors import (
     LlmModelNotFoundError,
     OllamaClientError,
@@ -29,6 +31,7 @@ class OllamaLlmClient(LlmClient):
     model: str = "qwen2.5"
     timeout_seconds: float = 120.0
     default_options: dict[str, object] | None = None
+    tracer: Tracer = NullTracer()
 
     def generate(self, request: LlmGenerateRequest) -> LlmGenerateResponse:
         payload: dict[str, object] = {
@@ -45,16 +48,57 @@ class OllamaLlmClient(LlmClient):
         if options:
             payload["options"] = options
 
-        response_data = self._post_json(
-            path="/api/generate",
-            payload=payload,
-        )
+        with self.tracer.start_generation(
+            name="ollama.generate",
+            model=self.model,
+            input_data={
+                "system_prompt": request.system_prompt,
+                "prompt": request.prompt,
+            },
+            metadata={
+                "provider": "ollama",
+                "path": "/api/generate",
+            },
+            model_parameters=_coerce_model_parameters(options),
+        ) as generation:
+            try:
+                response_data = self._post_json(
+                    path="/api/generate",
+                    payload=payload,
+                )
 
-        response_text = response_data.get("response")
+                response_text = response_data.get("response")
 
-        if not isinstance(response_text, str):
-            msg = "Ollama response does not contain string `response` field."
-            raise OllamaClientError(msg)
+                if not isinstance(response_text, str):
+                    msg = (
+                        "Ollama response does not contain string "
+                        "`response` field."
+                    )
+                    raise OllamaClientError(msg)
+
+                generation.update(
+                    output=response_text.strip(),
+                    usage_details=_extract_usage_details(response_data),
+                    metadata={
+                        "provider": "ollama",
+                        "path": "/api/generate",
+                        "eval_count": response_data.get("eval_count"),
+                        "prompt_eval_count": response_data.get(
+                            "prompt_eval_count",
+                        ),
+                        "total_duration": response_data.get("total_duration"),
+                    },
+                )
+            except Exception as error:
+                generation.update(
+                    metadata={
+                        "provider": "ollama",
+                        "path": "/api/generate",
+                        "error_type": type(error).__name__,
+                    },
+                    status_message=str(error),
+                )
+                raise
 
         return LlmGenerateResponse(text=response_text.strip())
 
@@ -115,7 +159,10 @@ class OllamaLlmClient(LlmClient):
                 duration_ms=round((perf_counter() - started_at) * 1000),
             )
 
-            msg = f"Ollama request failed with HTTP {error.code}: {error_message}"
+            msg = (
+                f"Ollama request failed with HTTP {error.code}: "
+                f"{error_message}"
+            )
             raise OllamaClientError(msg) from error
         except urllib.error.URLError as error:
             logger.warning(
@@ -144,7 +191,10 @@ class OllamaLlmClient(LlmClient):
 
             raise OllamaClientError(
                 "Ollama request timed out.",
-                hint="Try increasing the Ollama timeout or using a smaller/faster model.",
+                hint=(
+                    "Try increasing the Ollama timeout or using a "
+                    "smaller/faster model."
+                ),
             ) from error
 
         try:
@@ -168,6 +218,7 @@ class OllamaLlmClient(LlmClient):
 
         return parsed
 
+
 def _extract_ollama_error_message(error_body: str) -> str:
     try:
         parsed = json.loads(error_body)
@@ -181,6 +232,7 @@ def _extract_ollama_error_message(error_body: str) -> str:
 
     return error_body
 
+
 def _extract_missing_model(error_message: str) -> str | None:
     prefix = "model '"
     suffix = "' not found"
@@ -192,3 +244,35 @@ def _extract_missing_model(error_message: str) -> str | None:
         return None
 
     return error_message.removeprefix(prefix).removesuffix(suffix)
+
+
+def _extract_usage_details(
+    response_data: dict[str, object],
+) -> dict[str, int] | None:
+    prompt_tokens = response_data.get("prompt_eval_count")
+    completion_tokens = response_data.get("eval_count")
+
+    if not isinstance(prompt_tokens, int) or not isinstance(
+        completion_tokens,
+        int,
+    ):
+        return None
+
+    return {
+        "input": prompt_tokens,
+        "output": completion_tokens,
+        "total": prompt_tokens + completion_tokens,
+    }
+
+
+def _coerce_model_parameters(
+    options: dict[str, object],
+) -> dict[str, Any] | None:
+    if not options:
+        return None
+
+    return {
+        key: value
+        for key, value in options.items()
+        if isinstance(value, str | int | float | bool)
+    }
