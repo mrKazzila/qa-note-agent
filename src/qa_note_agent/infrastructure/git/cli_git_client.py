@@ -6,6 +6,9 @@ from time import perf_counter
 
 import structlog
 
+from qa_note_agent.application.policies.diff_exclusions import (
+    DEFAULT_DIFF_EXCLUDE_PATTERNS,
+)
 from qa_note_agent.application.ports.git import GitClient
 from qa_note_agent.domain.branch_changes import BranchChanges
 from qa_note_agent.infrastructure.git.errors import GitCommandError
@@ -21,6 +24,12 @@ logger = structlog.get_logger(__name__)
 class CliGitClient(GitClient):
     """Git client implementation based on local git CLI."""
 
+    def __init__(
+        self,
+        patch_exclude_patterns: tuple[str, ...] = DEFAULT_DIFF_EXCLUDE_PATTERNS,
+    ) -> None:
+        self._patch_exclude_patterns = patch_exclude_patterns
+
     def analyze_branch(
         self,
         repo_path: Path,
@@ -28,6 +37,7 @@ class CliGitClient(GitClient):
         head_ref: str = "HEAD",
     ) -> BranchChanges:
         started_at = perf_counter()
+
         merge_base = self._merge_base(
             repo_path=repo_path,
             base_ref=base_ref,
@@ -79,6 +89,9 @@ class CliGitClient(GitClient):
             "--no-ext-diff",
             "--find-renames",
             f"{merge_base}...{head_ref}",
+            "--",
+            ".",
+            *self._build_exclude_pathspecs(self._patch_exclude_patterns),
         )
 
         changes = BranchChanges(
@@ -104,6 +117,7 @@ class CliGitClient(GitClient):
             deletions=changes.stats.deletions,
             binary_files=changes.stats.binary_files,
             patch_size_bytes=len(changes.patch.encode("utf-8")),
+            patch_exclude_patterns_count=len(self._patch_exclude_patterns),
             duration_ms=round((perf_counter() - started_at) * 1000),
         )
 
@@ -146,3 +160,7 @@ class CliGitClient(GitClient):
             )
 
         return result.stdout
+
+    @staticmethod
+    def _build_exclude_pathspecs(patterns: tuple[str, ...]) -> tuple[str, ...]:
+        return tuple(f":(exclude,top,glob){pattern}" for pattern in patterns)
