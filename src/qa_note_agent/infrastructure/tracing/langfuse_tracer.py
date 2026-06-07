@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import structlog
-from langfuse import Langfuse
+from langfuse import Langfuse, propagate_attributes
 
 from qa_note_agent.application.ports.tracing import (
     NullTracer,
@@ -78,6 +78,7 @@ class LangfuseTracer:
         name: str,
         input_data: Any | None = None,
         metadata: Any | None = None,
+        session_id: str | None = None,
     ) -> AbstractContextManager[TraceHandle]:
         with self._client.start_as_current_observation(
             name=name,
@@ -85,7 +86,12 @@ class LangfuseTracer:
             input=_sanitize_for_tracing(input_data),
             metadata=_sanitize_for_tracing(metadata),
         ) as observation:
-            yield LangfuseTraceHandle(observation)
+            if session_id is None:
+                yield LangfuseTraceHandle(observation)
+                return
+
+            with propagate_attributes(session_id=session_id):
+                yield LangfuseTraceHandle(observation)
 
     @contextmanager
     def start_generation(

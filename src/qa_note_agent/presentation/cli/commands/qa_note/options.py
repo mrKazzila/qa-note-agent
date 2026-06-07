@@ -55,6 +55,20 @@ class BuildQAContextChunkOptions(BuildQAContextOptions):
 
 @dataclass
 class GenerateQANoteOptions(BuildQAContextOptions):
+    session_id = CLIOptionSpec[str | None](
+        annotation=Annotated[
+            str | None,
+            typer.Option(
+                "--session-id",
+                help=(
+                    "Optional Langfuse session ID. Defaults to a stable ID "
+                    "derived from repo path and refs."
+                ),
+            ),
+        ],
+        default=None,
+    )
+
     map_temperature = CLIOptionSpec[float](
         annotation=Annotated[
             float,

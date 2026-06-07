@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import re
 from pathlib import Path
 from time import perf_counter
 
@@ -47,6 +49,7 @@ class GenerateQaNoteUseCase:
         repo_path: Path,
         base_ref: str,
         head_ref: str = "HEAD",
+        session_id: str | None = None,
         max_chunk_chars: int = 12_000,
         map_temperature: float = 0.1,
         reduce_temperature: float = 0.2,
@@ -54,10 +57,17 @@ class GenerateQaNoteUseCase:
         reduce_num_predict: int = 1_400,
     ) -> QaNote:
         started_at = perf_counter()
+        resolved_session_id = _build_session_id(
+            repo_path=repo_path,
+            base_ref=base_ref,
+            head_ref=head_ref,
+            session_id=session_id,
+        )
         base_log = logger.bind(
             repo_path=str(repo_path),
             base_ref=base_ref,
             head_ref=head_ref,
+            langfuse_session_id=resolved_session_id,
         )
 
         try:
@@ -75,6 +85,7 @@ class GenerateQaNoteUseCase:
                     "map_num_predict": map_num_predict,
                     "reduce_num_predict": reduce_num_predict,
                 },
+                session_id=resolved_session_id,
             ) as trace:
                 log = base_log.bind(
                     langfuse_trace_id=self._tracer.get_current_trace_id(),
@@ -229,3 +240,33 @@ class GenerateQaNoteUseCase:
                 ),
             ),
         )
+
+
+def _build_session_id(
+    *,
+    repo_path: Path,
+    base_ref: str,
+    head_ref: str,
+    session_id: str | None,
+) -> str:
+    if session_id is not None and session_id.strip():
+        return _normalize_session_id(session_id)
+
+    repo_name = repo_path.resolve().name or "repo"
+    seed = f"qa-note-agent:{repo_path.resolve()}:{base_ref}:{head_ref}"
+    suffix = hashlib.sha1(seed.encode("utf-8")).hexdigest()[:12]
+
+    return _normalize_session_id(
+        f"qa-note:{repo_name}:{base_ref}:{head_ref}:{suffix}",
+    )
+
+
+def _normalize_session_id(value: str) -> str:
+    normalized = "".join(
+        char if ord(char) < 128 else "-" for char in value.strip()
+    )
+    normalized = re.sub(r"\s+", "-", normalized)
+    normalized = re.sub(r"[^A-Za-z0-9._:/=-]+", "-", normalized)
+    normalized = normalized.strip("-") or "qa-note-session"
+
+    return normalized[:200]

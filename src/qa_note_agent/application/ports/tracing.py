@@ -43,6 +43,7 @@ class Tracer(Protocol):
         name: str,
         input_data: Any | None = None,
         metadata: Any | None = None,
+        session_id: str | None = None,
     ) -> AbstractContextManager[TraceHandle]: ...
 
     def start_generation(
@@ -72,8 +73,9 @@ class NullTracer:
         name: str,
         input_data: Any | None = None,
         metadata: Any | None = None,
+        session_id: str | None = None,
     ) -> AbstractContextManager[TraceHandle]:
-        del name, input_data, metadata
+        del name, input_data, metadata, session_id
         yield TraceHandle()
 
     @contextmanager

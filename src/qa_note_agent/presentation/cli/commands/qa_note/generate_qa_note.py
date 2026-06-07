@@ -20,18 +20,32 @@ def create_generate_qa_note_command(context: CliContext) -> CLICommandFunc:
         repo_path: Options.repo_path.annotation = Options.repo_path.default,
         base_ref: Options.base_ref.annotation = Options.base_ref.default,
         head_ref: Options.head_ref.annotation = Options.head_ref.default,
-        max_chunk_chars: Options.max_chunk_chars.annotation = Options.max_chunk_chars.default,
-        map_temperature: Options.map_temperature.annotation = Options.map_temperature.default,
-        reduce_temperature: Options.reduce_temperature.annotation = Options.reduce_temperature.default,
-        map_num_predict: Options.map_num_predict.annotation = Options.map_num_predict.default,
-        reduce_num_predict: Options.reduce_num_predict.annotation = Options.reduce_num_predict.default,
-        output_path: Options.output_path.annotation = Options.output_path.default,
+        session_id: Options.session_id.annotation = Options.session_id.default,
+        max_chunk_chars: Options.max_chunk_chars.annotation = (
+            Options.max_chunk_chars.default
+        ),
+        map_temperature: Options.map_temperature.annotation = (
+            Options.map_temperature.default
+        ),
+        reduce_temperature: Options.reduce_temperature.annotation = (
+            Options.reduce_temperature.default
+        ),
+        map_num_predict: Options.map_num_predict.annotation = (
+            Options.map_num_predict.default
+        ),
+        reduce_num_predict: Options.reduce_num_predict.annotation = (
+            Options.reduce_num_predict.default
+        ),
+        output_path: Options.output_path.annotation = (
+            Options.output_path.default
+        ),
     ) -> None:
         """Generate QA note from local Git branch changes."""
         qa_note = context.generate_qa_note_use_case.execute(
             repo_path=repo_path,
             base_ref=base_ref,
             head_ref=head_ref,
+            session_id=session_id,
             max_chunk_chars=max_chunk_chars,
             map_temperature=map_temperature,
             reduce_temperature=reduce_temperature,
@@ -42,7 +56,8 @@ def create_generate_qa_note_command(context: CliContext) -> CLICommandFunc:
         if output_path is not None:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             output_path.write_text(
-                data=qa_note.content + "\n", encoding="utf-8"
+                data=qa_note.content + "\n",
+                encoding="utf-8",
             )
 
             typer.echo(

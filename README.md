@@ -149,6 +149,26 @@ QA_NOTE_AGENT_LANGFUSE__BASE_URL=https://cloud.langfuse.com
 QA_NOTE_AGENT_LANGFUSE__ENVIRONMENT=local
 QA_NOTE_AGENT_LANGFUSE__SAMPLE_RATE=1.0
 QA_NOTE_AGENT_LANGFUSE__DEBUG=false
+
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=replace-me-nextauth-secret
+ENCRYPTION_KEY=replace-me-64-hex-chars
+SALT=replace-me-salt
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=postgres
+
+CLICKHOUSE_USER=clickhouse
+CLICKHOUSE_PASSWORD=clickhouse
+
+REDIS_AUTH=myredissecret
+
+MINIO_ROOT_USER=minio
+MINIO_ROOT_PASSWORD=miniosecret
+
+TELEMETRY_ENABLED=false
+LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=false
 ```
 
 Langfuse is optional. If `QA_NOTE_AGENT_LANGFUSE__PUBLIC_KEY` and
@@ -156,6 +176,19 @@ Langfuse is optional. If `QA_NOTE_AGENT_LANGFUSE__PUBLIC_KEY` and
 When configured, the `generate` command creates a parent trace for the
 QA-note run and nested generation observations for each Ollama call, then
 flushes the trace before the CLI exits.
+
+The same `env/.env` file is also used for local Langfuse Docker services.
+Start them with:
+
+```bash
+docker compose --env-file env/.env up -d
+```
+
+Stop them with:
+
+```bash
+docker compose --env-file env/.env down
+```
 
 ### 3. Analyze branch changes
 
@@ -211,12 +244,17 @@ Tune generation limits:
 qa-note-agent generate \
   --repo . \
   --base origin/main \
+  --session-id qa-note:feature-branch \
   --max-chunk-chars 12000 \
   --map-temperature 0.1 \
   --reduce-temperature 0.2 \
   --map-num-predict 800 \
   --reduce-num-predict 1400
 ```
+
+If `--session-id` is omitted, the CLI derives a stable Langfuse session ID
+from the repo path and selected refs. This groups repeated runs for the same
+comparison into one Langfuse session.
 
 ## Notes
 
