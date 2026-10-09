@@ -26,7 +26,10 @@ class CliGitClient(GitClient):
 
     def __init__(
         self,
-        patch_exclude_patterns: tuple[str, ...] = DEFAULT_DIFF_EXCLUDE_PATTERNS,
+        patch_exclude_patterns: tuple[
+            str,
+            ...,
+        ] = DEFAULT_DIFF_EXCLUDE_PATTERNS,
     ) -> None:
         self._patch_exclude_patterns = patch_exclude_patterns
 
