@@ -15,7 +15,6 @@ DEFAULT_DIFF_EXCLUDE_RULES: tuple[DiffExcludeRule, ...] = (
     DiffExcludeRule("poetry.lock", "python_lockfile"),
     DiffExcludeRule("Pipfile.lock", "python_lockfile"),
     DiffExcludeRule("pdm.lock", "python_lockfile"),
-
     # JavaScript / TypeScript / Node
     DiffExcludeRule("package-lock.json", "node_lockfile"),
     DiffExcludeRule("npm-shrinkwrap.json", "node_lockfile"),
@@ -24,42 +23,31 @@ DEFAULT_DIFF_EXCLUDE_RULES: tuple[DiffExcludeRule, ...] = (
     DiffExcludeRule("bun.lock", "node_lockfile"),
     DiffExcludeRule("bun.lockb", "node_lockfile"),
     DiffExcludeRule("deno.lock", "deno_lockfile"),
-
     # Rust
     DiffExcludeRule("Cargo.lock", "rust_lockfile"),
-
     # Go
     DiffExcludeRule("go.sum", "go_checksum_file"),
-
     # Java / Kotlin / Gradle / Maven
     DiffExcludeRule("gradle.lockfile", "gradle_lockfile"),
     DiffExcludeRule("dependencies.lock", "dependency_lockfile"),
-
     # PHP
     DiffExcludeRule("composer.lock", "php_lockfile"),
-
     # Ruby
     DiffExcludeRule("Gemfile.lock", "ruby_lockfile"),
-
     # .NET
     DiffExcludeRule("packages.lock.json", "dotnet_lockfile"),
     DiffExcludeRule("project.assets.json", "dotnet_generated_assets"),
-
     # Swift
     DiffExcludeRule("Package.resolved", "swift_lockfile"),
-
     # Dart / Flutter
     DiffExcludeRule("pubspec.lock", "dart_lockfile"),
-
     # Elixir / Erlang
     DiffExcludeRule("mix.lock", "elixir_lockfile"),
     DiffExcludeRule("rebar.lock", "erlang_lockfile"),
-
     # R / Nix / Terraform
     DiffExcludeRule("renv.lock", "r_lockfile"),
     DiffExcludeRule("flake.lock", "nix_lockfile"),
     DiffExcludeRule(".terraform.lock.hcl", "terraform_lockfile"),
-
     # Generated files
     DiffExcludeRule("*.generated.*", "generated_file"),
     DiffExcludeRule("*.gen.*", "generated_file"),
@@ -69,7 +57,6 @@ DEFAULT_DIFF_EXCLUDE_RULES: tuple[DiffExcludeRule, ...] = (
     DiffExcludeRule("**/generated/**", "generated_directory"),
     DiffExcludeRule("**/gen/**", "generated_directory"),
     DiffExcludeRule("**/__generated__/**", "generated_directory"),
-
     # Vendored / build directories
     DiffExcludeRule("vendor/**", "vendored_dependency"),
     DiffExcludeRule("**/vendor/**", "vendored_dependency"),
@@ -81,7 +68,6 @@ DEFAULT_DIFF_EXCLUDE_RULES: tuple[DiffExcludeRule, ...] = (
     DiffExcludeRule("build/**", "build_artifact"),
     DiffExcludeRule("out/**", "build_artifact"),
     DiffExcludeRule(".next/**", "frontend_build_artifact"),
-
     # Snapshots / reports
     DiffExcludeRule("**/__snapshots__/**", "test_snapshot"),
     DiffExcludeRule("*.snap", "test_snapshot"),
@@ -89,7 +75,6 @@ DEFAULT_DIFF_EXCLUDE_RULES: tuple[DiffExcludeRule, ...] = (
     DiffExcludeRule("**/coverage/**", "coverage_artifact"),
     DiffExcludeRule("htmlcov/**", "coverage_artifact"),
     DiffExcludeRule("playwright-report/**", "test_report"),
-
     # Binary / media / archives
     DiffExcludeRule("*.png", "binary_or_media_file"),
     DiffExcludeRule("*.jpg", "binary_or_media_file"),

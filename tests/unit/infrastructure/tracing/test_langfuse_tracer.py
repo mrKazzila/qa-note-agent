@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from qa_note_agent.config.settings.langfuse import LangfuseSettings
-from qa_note_agent.infrastructure import tracing as langfuse_tracing
+from qa_note_agent.config.settings.langfuse import (
+    LangfuseSettings,
+)
+from qa_note_agent.infrastructure.observability import (
+    langfuse_tracer as langfuse_tracing,
+)
 
 
 class _FakeObservation:
@@ -37,7 +41,9 @@ def test_sanitize_for_tracing_redacts_nested_secrets() -> None:
         "keys": ("sk-lf-123456", "pk-lf-654321"),
     }
 
-    sanitized = langfuse_tracing.langfuse_tracer._sanitize_for_tracing(payload)
+    sanitized = langfuse_tracing._sanitize_for_tracing(
+        payload,
+    )
 
     assert sanitized == {
         "prompt": "api_key=[REDACTED] token: [REDACTED]",
@@ -48,7 +54,7 @@ def test_sanitize_for_tracing_redacts_nested_secrets() -> None:
 
 def test_trace_handle_update_sanitizes_payloads_before_forwarding() -> None:
     observation = _FakeObservation()
-    handle = langfuse_tracing.langfuse_tracer.LangfuseTraceHandle(
+    handle = langfuse_tracing.LangfuseTraceHandle(
         _observation=observation,
     )
 
@@ -68,8 +74,8 @@ def test_trace_handle_update_sanitizes_payloads_before_forwarding() -> None:
 
 
 def test_langfuse_tracer_flush_swallows_export_errors() -> None:
-    tracer = langfuse_tracing.langfuse_tracer.LangfuseTracer(  # type: ignore[arg-type]
-        client=_FailingClient(),
+    tracer = langfuse_tracing.LangfuseTracer(
+        client=_FailingClient(),  # ty: ignore[invalid-argument-type]
     )
 
     tracer.flush()

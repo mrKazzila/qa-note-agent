@@ -13,24 +13,27 @@ Do not invent product behavior, user-facing features, APIs, commands, screens,
 settings, or integrations.
 
 Do not perform code review.
-Do not produce style, formatting, linting, documentation, naming, or readability
+Do not produce style, formatting, linting, documentation, naming, or
+readability
 checklists unless the diff directly changes those behaviors, tools, or rules.
 
 Be repository-agnostic and programming-language-agnostic.
 Do not assume a specific language, framework, runtime, architecture, package
-manager, test framework, deployment model, or product domain unless it is visible
+manager, test framework, deployment model, or product domain unless it is
+visible
 in the provided Git context.
 
 Separate internal implementation details from externally observable behavior.
 A code identifier, file name, class, function, method, module, component,
-package, script, test name, or directory name is not automatically a user-facing
+package, script, test name, or directory name is not automatically a user-
+facing
 feature.
 
 Write concise, specific, test-oriented output.
 """
 
 
-def build_chunk_analysis_prompt(chunk: QaNoteContextChunk) -> str:
+def build_chunk_analysis_prompt(*, chunk: QaNoteContextChunk) -> str:
     """Build prompt for analyzing a single diff chunk."""
     return f"""\
 Analyze this Git diff context chunk.
@@ -60,7 +63,8 @@ Rules:
   compatibility, error handling, security, performance, or user-visible risks
   over generic engineering advice.
 - Separate internal implementation details from public behavior.
-- Do not treat internal code identifiers, file names, class names, function names,
+- Do not treat internal code identifiers, file names, class names, function
+  names,
   module names, component names, package names, script names, or test names as
   user-facing features unless the diff explicitly exposes them.
 - For public interfaces, mention exact names only when they are visible in the
@@ -69,7 +73,8 @@ Rules:
 - If the public interface is unclear, describe the affected area without
   inventing names.
 - Do not include code blocks.
-- Do not include style, formatting, linting, naming, documentation, or readability
+- Do not include style, formatting, linting, naming, documentation, or
+  readability
   checks unless directly relevant.
 - Do not write final QA notes.
 - If this chunk has no QA-relevant implications, say:
@@ -149,7 +154,8 @@ Rules:
 - Do not include "Detailed QA Checks".
 - Do not include "Notes on New Files".
 - Do not include explanations or meta commentary.
-- Do not include style, formatting, linting, naming, documentation, or readability
+- Do not include style, formatting, linting, naming, documentation, or
+  readability
   checks unless directly relevant.
 - Do not mention chunks.
 - Do not invent behavior that is not present in the findings.

@@ -7,7 +7,7 @@ from qa_note_agent.presentation.cli.commands.qa_note.options import (
     BuildQAContextOptions as Options,
 )
 from qa_note_agent.presentation.cli.dependencies import CliContext
-from qa_note_agent.presentation.renderers.qa_note_context import (
+from qa_note_agent.presentation.cli.renderers.qa_note_context import (
     render_qa_note_context,
 )
 
@@ -19,7 +19,9 @@ def create_build_qa_context_command(context: CliContext) -> CLICommandFunc:
         repo_path: Options.repo_path.annotation = Options.repo_path.default,
         base_ref: Options.base_ref.annotation = Options.base_ref.default,
         head_ref: Options.head_ref.annotation = Options.head_ref.default,
-        max_patch_chars: Options.max_chunk_chars.annotation = Options.max_chunk_chars.default,
+        max_patch_chars: Options.max_chunk_chars.annotation = (
+            Options.max_chunk_chars.default
+        ),
     ) -> None:
         """Build LLM-ready context from local Git branch changes."""
         changes = context.analyze_branch_changes_use_case.execute(

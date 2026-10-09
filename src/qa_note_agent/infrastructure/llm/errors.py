@@ -17,5 +17,8 @@ class LlmModelNotFoundError(LlmClientError):
     def __init__(self, model: str) -> None:
         super().__init__(
             f"LLM model `{model}` was not found in Ollama.",
-            hint=f"Run `ollama pull {model}` or change the configured model name.",
+            hint=(
+                f"Run `ollama pull {model}` "
+                "or change the configured model name."
+            ),
         )

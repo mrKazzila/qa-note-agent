@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from typing import Any, Protocol
@@ -74,7 +75,7 @@ class NullTracer:
         input_data: Any | None = None,
         metadata: Any | None = None,
         session_id: str | None = None,
-    ) -> AbstractContextManager[TraceHandle]:
+    ) -> Iterator[TraceHandle]:
         del name, input_data, metadata, session_id
         yield TraceHandle()
 
@@ -87,7 +88,7 @@ class NullTracer:
         input_data: Any | None = None,
         metadata: Any | None = None,
         model_parameters: dict[str, Any] | None = None,
-    ) -> AbstractContextManager[TraceHandle]:
+    ) -> Iterator[TraceHandle]:
         del name, model, input_data, metadata, model_parameters
         yield TraceHandle()
 

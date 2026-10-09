@@ -6,7 +6,7 @@ from qa_note_agent.presentation.cli.commands.register import register_commands
 from qa_note_agent.presentation.cli.dependencies import CliContext
 
 
-def create_app(context: CliContext) -> typer.Typer:
+def create_app(*, context: CliContext) -> typer.Typer:
     """Create CLI application."""
     app = _create_typer_app(context=context)
     _setup_app(app=app, context=context)
@@ -14,13 +14,13 @@ def create_app(context: CliContext) -> typer.Typer:
     return app
 
 
-def _create_typer_app(context: CliContext) -> typer.Typer:
+def _create_typer_app(*, context: CliContext) -> typer.Typer:
     """Create base Typer application."""
     rich_markup_mode: Literal["markdown", "rich"] = "rich"
 
     return typer.Typer(
-        name=context.settings.name,
-        help=f"{context.settings.name} {context.settings.version}",
+        name=context.settings.app.name,
+        help=f"{context.settings.app.name} {context.settings.app.version}",
         rich_markup_mode=rich_markup_mode,
         add_completion=True,
         no_args_is_help=True,
@@ -29,6 +29,10 @@ def _create_typer_app(context: CliContext) -> typer.Typer:
     )
 
 
-def _setup_app(app: typer.Typer, context: CliContext) -> None:
+def _setup_app(
+    *,
+    app: typer.Typer,
+    context: CliContext,
+) -> None:
     """Setup CLI application."""
     register_commands(app=app, context=context)

@@ -7,7 +7,7 @@ from qa_note_agent.presentation.cli.commands.qa_note.options import (
     GenerateQANoteOptions as Options,
 )
 from qa_note_agent.presentation.cli.dependencies import CliContext
-from qa_note_agent.presentation.renderers.qa_note import (
+from qa_note_agent.presentation.cli.renderers.qa_note import (
     render_qa_note_stdout,
     render_qa_note_write_summary,
 )

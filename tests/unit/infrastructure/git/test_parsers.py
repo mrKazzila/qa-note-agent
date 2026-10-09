@@ -15,16 +15,13 @@ from qa_note_agent.infrastructure.git.parsers import (
 
 
 def test_parse_commits_parses_single_commit() -> None:
-    # Arrange
     raw = (
         "1234567890abcdef\x1fAlice\x1falice@example.com\x1f2026-06-01T12:00:00+00:00"
         "\x1fAdd parser tests\x1fBody text\x1e"
     )
 
-    # Act
     result = parse_commits(raw)
 
-    # Assert
     assert result == (
         CommitInfo(
             sha="1234567890abcdef",
@@ -38,7 +35,6 @@ def test_parse_commits_parses_single_commit() -> None:
 
 
 def test_parse_commits_parses_multiple_commits() -> None:
-    # Arrange
     raw = (
         "1234567890abcdef\x1fAlice\x1falice@example.com\x1f2026-06-01T12:00:00+00:00"
         "\x1fAdd parser tests\x1fBody text\x1e"
@@ -46,10 +42,8 @@ def test_parse_commits_parses_multiple_commits() -> None:
         "\x1fRender git changes\x1fFollow-up body\x1e"
     )
 
-    # Act
     result = parse_commits(raw)
 
-    # Assert
     assert result == (
         CommitInfo(
             sha="1234567890abcdef",
@@ -71,16 +65,13 @@ def test_parse_commits_parses_multiple_commits() -> None:
 
 
 def test_parse_commits_strips_commit_body() -> None:
-    # Arrange
     raw = (
         "1234567890abcdef\x1fAlice\x1falice@example.com\x1f2026-06-01T12:00:00+00:00"
         "\x1fAdd parser tests\x1f\n\nDetailed explanation.\nSecond line.\n\x1e"
     )
 
-    # Act
     result = parse_commits(raw)
 
-    # Assert
     assert result == (
         CommitInfo(
             sha="1234567890abcdef",
@@ -94,17 +85,14 @@ def test_parse_commits_strips_commit_body() -> None:
 
 
 def test_parse_commits_skips_malformed_record() -> None:
-    # Arrange
     raw = (
         "broken record without separators\x1e"
         "1234567890abcdef\x1fAlice\x1falice@example.com\x1f2026-06-01T12:00:00+00:00"
         "\x1fAdd parser tests\x1fBody text\x1e"
     )
 
-    # Act
     result = parse_commits(raw)
 
-    # Assert
     assert result == (
         CommitInfo(
             sha="1234567890abcdef",
@@ -130,13 +118,10 @@ def test_parse_changed_files_maps_simple_statuses(
     path: str,
     expected_status: str,
 ) -> None:
-    # Arrange
     raw = f"{status_raw}\t{path}"
 
-    # Act
     result = parse_changed_files(raw)
 
-    # Assert
     assert result == (
         ChangedFile(
             path=path,
@@ -160,13 +145,10 @@ def test_parse_changed_files_parses_rename_and_copy_entries(
     expected_status: str,
     similarity: int,
 ) -> None:
-    # Arrange
     raw = f"{status_raw}\t{old_path}\t{new_path}"
 
-    # Act
     result = parse_changed_files(raw)
 
-    # Assert
     assert result == (
         ChangedFile(
             path=new_path,
@@ -222,11 +204,8 @@ def test_parse_numstat_summary_aggregates_expected_stats(
     raw: str,
     expected: ChangeStats,
 ) -> None:
-    # Arrange
     numstat_output = raw
 
-    # Act
     result = parse_numstat_summary(numstat_output)
 
-    # Assert
     assert result == expected

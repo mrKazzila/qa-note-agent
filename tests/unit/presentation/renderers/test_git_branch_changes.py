@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -10,13 +11,13 @@ from qa_note_agent.domain.branch_changes import (
     ChangeStats,
     CommitInfo,
 )
-from qa_note_agent.presentation.renderers.git_branch_changes import (
+from qa_note_agent.presentation.cli.renderers.git_branch_changes import (
     render_git_branch_changes,
 )
 
 
 @pytest.fixture
-def branch_changes_factory():
+def branch_changes_factory() -> Callable[..., BranchChanges]:
     def factory(
         *,
         commits: tuple[CommitInfo, ...] | None = None,
@@ -46,9 +47,9 @@ def branch_changes_factory():
 
 
 def test_render_git_branch_changes_renders_main_sections(
-    branch_changes_factory,
+    branch_changes_factory: Callable[..., BranchChanges],
 ) -> None:
-    # Arrange
+
     changes = branch_changes_factory(
         commits=(
             CommitInfo(
@@ -74,13 +75,11 @@ def test_render_git_branch_changes_renders_main_sections(
         ),
     )
 
-    # Act
     result = render_git_branch_changes(
         changes=changes,
         repo_path=Path("/repo/project"),
     )
 
-    # Assert
     assert "# Git branch analysis" in result
     assert "## Summary" in result
     assert "## Changed files" in result
@@ -88,9 +87,8 @@ def test_render_git_branch_changes_renders_main_sections(
 
 
 def test_render_git_branch_changes_renders_rename_with_similarity(
-    branch_changes_factory,
+    branch_changes_factory: Callable[..., BranchChanges],
 ) -> None:
-    # Arrange
     changes = branch_changes_factory(
         changed_files=(
             ChangedFile(
@@ -102,54 +100,45 @@ def test_render_git_branch_changes_renders_rename_with_similarity(
         ),
     )
 
-    # Act
     result = render_git_branch_changes(
         changes=changes,
         repo_path=Path("/repo/project"),
     )
 
-    # Assert
     assert "`RENAMED` `src/old.py` → `src/new.py` (87%)" in result
 
 
 def test_render_git_branch_changes_shows_empty_changed_files_section(
-    branch_changes_factory,
+    branch_changes_factory: Callable[..., BranchChanges],
 ) -> None:
-    # Arrange
     changes = branch_changes_factory()
 
-    # Act
     result = render_git_branch_changes(
         changes=changes,
         repo_path=Path("/repo/project"),
     )
 
-    # Assert
     assert "## Changed files" in result
     assert "No changed files." in result
 
 
 def test_render_git_branch_changes_shows_empty_commits_section(
-    branch_changes_factory,
+    branch_changes_factory: Callable[..., BranchChanges],
 ) -> None:
-    # Arrange
     changes = branch_changes_factory()
 
-    # Act
     result = render_git_branch_changes(
         changes=changes,
         repo_path=Path("/repo/project"),
     )
 
-    # Assert
     assert "## Commits" in result
     assert "No commits." in result
 
 
 def test_render_git_branch_changes_includes_stat_block_only_when_present(
-    branch_changes_factory,
+    branch_changes_factory: Callable[..., BranchChanges],
 ) -> None:
-    # Arrange
     changes_with_stat = branch_changes_factory(
         stats=ChangeStats(
             files_changed=1,
@@ -169,7 +158,6 @@ def test_render_git_branch_changes_includes_stat_block_only_when_present(
         stat_raw="",
     )
 
-    # Act
     rendered_with_stat = render_git_branch_changes(
         changes=changes_with_stat,
         repo_path=Path("/repo/project"),
@@ -179,16 +167,14 @@ def test_render_git_branch_changes_includes_stat_block_only_when_present(
         repo_path=Path("/repo/project"),
     )
 
-    # Assert
     assert "```text" in rendered_with_stat
     assert "src/module.py | 4 ++--" in rendered_with_stat
     assert "```text" not in rendered_without_stat
 
 
 def test_render_git_branch_changes_includes_binary_files_line_only_when_needed(
-    branch_changes_factory,
+    branch_changes_factory: Callable[..., BranchChanges],
 ) -> None:
-    # Arrange
     changes_with_binary = branch_changes_factory(
         stats=ChangeStats(
             files_changed=2,
@@ -206,7 +192,6 @@ def test_render_git_branch_changes_includes_binary_files_line_only_when_needed(
         ),
     )
 
-    # Act
     rendered_with_binary = render_git_branch_changes(
         changes=changes_with_binary,
         repo_path=Path("/repo/project"),
@@ -216,6 +201,5 @@ def test_render_git_branch_changes_includes_binary_files_line_only_when_needed(
         repo_path=Path("/repo/project"),
     )
 
-    # Assert
     assert "- Binary files: `1`" in rendered_with_binary
     assert "- Binary files:" not in rendered_without_binary

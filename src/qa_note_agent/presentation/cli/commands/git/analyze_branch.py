@@ -7,7 +7,7 @@ from qa_note_agent.presentation.cli.commands.git.options import (
     AnalyzeBranchOptions as Options,
 )
 from qa_note_agent.presentation.cli.dependencies import CliContext
-from qa_note_agent.presentation.renderers.git_branch_changes import (
+from qa_note_agent.presentation.cli.renderers.git_branch_changes import (
     render_git_branch_changes,
 )
 

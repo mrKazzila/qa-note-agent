@@ -21,6 +21,7 @@ class DiffChunker:
 
     def split(
         self,
+        *,
         patch: str,
         max_chunk_chars: int,
     ) -> tuple[DiffChunk, ...]:
@@ -34,8 +35,8 @@ class DiffChunker:
 
         chunks: list[DiffChunk] = []
 
-        for file_patch in _split_file_patches(patch):
-            file_path = _extract_file_path(file_patch)
+        for file_patch in _split_file_patches(patch=patch):
+            file_path = _extract_file_path(file_patch=file_patch)
 
             if len(file_patch) <= max_chunk_chars:
                 chunks.append(
@@ -58,7 +59,7 @@ class DiffChunker:
         return tuple(chunks)
 
 
-def _split_file_patches(patch: str) -> tuple[str, ...]:
+def _split_file_patches(*, patch: str) -> tuple[str, ...]:
     file_patches: list[str] = []
     current_lines: list[str] = []
 
@@ -76,7 +77,7 @@ def _split_file_patches(patch: str) -> tuple[str, ...]:
     return tuple(file_patches)
 
 
-def _extract_file_path(file_patch: str) -> str:
+def _extract_file_path(*, file_patch: str) -> str:
     first_line = file_patch.splitlines()[0] if file_patch.splitlines() else ""
 
     match = re.match(r"^diff --git a/(.+?) b/(.+)$", first_line)
@@ -93,7 +94,7 @@ def _split_large_file_patch(
     file_path: str,
     max_chunk_chars: int,
 ) -> tuple[DiffChunk, ...]:
-    header, hunks = _split_header_and_hunks(file_patch)
+    header, hunks = _split_header_and_hunks(file_patch=file_patch)
 
     if not hunks:
         return _hard_split_text(
@@ -148,7 +149,7 @@ def _split_large_file_patch(
     return tuple(chunks)
 
 
-def _split_header_and_hunks(file_patch: str) -> tuple[str, tuple[str, ...]]:
+def _split_header_and_hunks(*, file_patch: str) -> tuple[str, tuple[str, ...]]:
     lines = file_patch.splitlines(keepends=True)
 
     first_hunk_index = next(

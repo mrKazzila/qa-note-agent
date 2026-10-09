@@ -2,22 +2,22 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from qa_note_agent.application.use_cases.generate_qa_note import (
-    _build_session_id,
-    _normalize_session_id,
+from qa_note_agent.application.services.qa_note_sessions import (
+    build_session_id,
+    normalize_session_id,
 )
 
 
 def test_build_session_id_is_stable_for_same_repo_and_refs() -> None:
     repo_path = Path("/tmp/example-repo")
 
-    first = _build_session_id(
+    first = build_session_id(
         repo_path=repo_path,
         base_ref="origin/main",
         head_ref="HEAD",
         session_id=None,
     )
-    second = _build_session_id(
+    second = build_session_id(
         repo_path=repo_path,
         base_ref="origin/main",
         head_ref="HEAD",
@@ -29,7 +29,7 @@ def test_build_session_id_is_stable_for_same_repo_and_refs() -> None:
 
 
 def test_build_session_id_normalizes_manual_override() -> None:
-    session_id = _build_session_id(
+    session_id = build_session_id(
         repo_path=Path("/tmp/example-repo"),
         base_ref="origin/main",
         head_ref="HEAD",
@@ -40,7 +40,7 @@ def test_build_session_id_normalizes_manual_override() -> None:
 
 
 def test_normalize_session_id_replaces_non_ascii_and_limits_length() -> None:
-    session_id = _normalize_session_id("тест " + ("a" * 300))
+    session_id = normalize_session_id(value="тест " + ("a" * 300))
 
     assert session_id.startswith("a")
     assert len(session_id) == 200

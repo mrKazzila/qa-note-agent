@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import re
-from contextlib import AbstractContextManager, contextmanager
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
 
@@ -79,7 +80,7 @@ class LangfuseTracer:
         input_data: Any | None = None,
         metadata: Any | None = None,
         session_id: str | None = None,
-    ) -> AbstractContextManager[TraceHandle]:
+    ) -> Iterator[TraceHandle]:
         with self._client.start_as_current_observation(
             name=name,
             as_type="span",
@@ -102,7 +103,7 @@ class LangfuseTracer:
         input_data: Any | None = None,
         metadata: Any | None = None,
         model_parameters: dict[str, Any] | None = None,
-    ) -> AbstractContextManager[TraceHandle]:
+    ) -> Iterator[TraceHandle]:
         with self._client.start_as_current_observation(
             name=name,
             as_type="generation",
