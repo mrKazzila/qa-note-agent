@@ -69,13 +69,7 @@ def _render_summary(*, changes: BranchChanges) -> str:
 
 def _render_changed_files(*, changes: BranchChanges) -> str:
     if not changes.changed_files:
-        return "\n".join(
-            (
-                "## Changed files",
-                "",
-                "No changed files.",
-            ),
-        )
+        return "## Changed files\n\nNo changed files."
 
     lines = [
         "## Changed files",
@@ -99,13 +93,7 @@ def _render_changed_files(*, changes: BranchChanges) -> str:
 
 def _render_commits(*, changes: BranchChanges) -> str:
     if not changes.commits:
-        return "\n".join(
-            (
-                "## Commits",
-                "",
-                "No commits.",
-            ),
-        )
+        return "## Commits\n\nNo commits."
 
     lines = [
         "## Commits",
@@ -128,20 +116,6 @@ def _render_commits(*, changes: BranchChanges) -> str:
 
 def _render_patch(*, changes: BranchChanges) -> str:
     if not changes.patch.strip():
-        return "\n".join(
-            (
-                "## Patch",
-                "",
-                "No patch.",
-            ),
-        )
+        return "## Patch\n\nNo patch."
 
-    return "\n".join(
-        (
-            "## Patch",
-            "",
-            "```diff",
-            changes.patch.rstrip(),
-            "```",
-        ),
-    )
+    return f"## Patch\n\n```diff\n{changes.patch.rstrip()}\n```"

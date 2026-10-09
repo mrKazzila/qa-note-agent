@@ -8,7 +8,7 @@ from qa_note_agent.application.services.diff_chunker import DiffChunker
 def test_split_returns_empty_tuple_for_empty_patch() -> None:
     chunker = DiffChunker()
 
-    chunks = chunker.split("", max_chunk_chars=100)
+    chunks = chunker.split(patch="", max_chunk_chars=100)
 
     assert chunks == ()
 
@@ -17,7 +17,7 @@ def test_split_rejects_non_positive_max_chunk_chars() -> None:
     chunker = DiffChunker()
 
     with pytest.raises(ValueError, match="max_chunk_chars"):
-        chunker.split("diff", max_chunk_chars=0)
+        chunker.split(patch="diff", max_chunk_chars=0)
 
 
 def test_split_keeps_small_file_patch_as_single_chunk() -> None:
@@ -31,7 +31,7 @@ index 1111111..2222222 100644
 +new
 """
 
-    chunks = chunker.split(patch, max_chunk_chars=1_000)
+    chunks = chunker.split(patch=patch, max_chunk_chars=1_000)
 
     assert len(chunks) == 1
     assert chunks[0].files == ("src/app.py",)
@@ -57,7 +57,7 @@ index 3333333..4444444 100644
 +new_test
 """
 
-    chunks = chunker.split(patch, max_chunk_chars=180)
+    chunks = chunker.split(patch=patch, max_chunk_chars=180)
 
     assert len(chunks) == 2
     assert chunks[0].files == ("src/app.py",)
@@ -81,7 +81,7 @@ index 1111111..2222222 100644
 +new_3
 """
 
-    chunks = chunker.split(patch, max_chunk_chars=170)
+    chunks = chunker.split(patch=patch, max_chunk_chars=170)
 
     assert len(chunks) > 1
     assert {chunk.files for chunk in chunks} == {("src/app.py",)}
@@ -100,7 +100,7 @@ index 1111111..2222222 100644
 +{large_line}
 """
 
-    chunks = chunker.split(patch, max_chunk_chars=200)
+    chunks = chunker.split(patch=patch, max_chunk_chars=200)
 
     assert len(chunks) > 1
     assert all(chunk.files == ("src/app.py",) for chunk in chunks)
@@ -113,7 +113,7 @@ index 1111111..2222222 100644
 def test_split_uses_unknown_file_for_non_git_diff_text() -> None:
     chunker = DiffChunker()
 
-    chunks = chunker.split("plain patch text", max_chunk_chars=100)
+    chunks = chunker.split(patch="plain patch text", max_chunk_chars=100)
 
     assert len(chunks) == 1
     assert chunks[0].files == ("unknown",)

@@ -1,8 +1,8 @@
 __all__ = ("AppSettings",)
 
-from typing import Literal
+from pydantic import BaseModel, Field
 
-from pydantic import BaseModel
+from qa_note_agent.config.settings.logger import LoggingSettings
 
 
 class AppSettings(BaseModel):
@@ -11,7 +11,6 @@ class AppSettings(BaseModel):
     name: str = "qa_note_agent"
     version: str = "0.0.1"
 
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
-    debug: bool = False
-    log_renderer: Literal["console", "json"] = "console"
-    use_utc_timestamps: bool = True
+    logging: LoggingSettings = Field(
+        default_factory=lambda: LoggingSettings(renderer="console"),
+    )

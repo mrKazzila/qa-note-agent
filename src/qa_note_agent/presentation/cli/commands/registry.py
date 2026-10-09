@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from qa_note_agent.presentation.cli.commands.git.analyze_branch import (
     create_analyze_branch_command,
 )
+from qa_note_agent.presentation.cli.commands.qa_note import (
+    build_qa_context_chunks,
+)
 from qa_note_agent.presentation.cli.commands.qa_note.build_qa_context import (
     create_build_qa_context_command,
-)
-from qa_note_agent.presentation.cli.commands.qa_note.build_qa_context_chunks import (
-    create_build_qa_context_chunks_command,
 )
 from qa_note_agent.presentation.cli.commands.qa_note.generate_qa_note import (
     create_generate_qa_note_command,
@@ -23,7 +23,7 @@ CLICommandFunc = Callable[..., Any]
 CLICommandFactory = Callable[[CliContext], CLICommandFunc]
 
 
-class CLIGroup(str, Enum):
+class CLIGroup(StrEnum):
     GENERAL = "General"
     QA_NOTE = "QA Note"
     CONFIG = "Configuration"
@@ -54,7 +54,9 @@ CLI_COMMANDS: tuple[CLICommandSpec, ...] = (
     ),
     CLICommandSpec(
         name="build-context-chunks",
-        command_factory=create_build_qa_context_chunks_command,
+        command_factory=(
+            build_qa_context_chunks.create_build_qa_context_chunks_command
+        ),
         help="Build chunked LLM-ready context from local Git branch changes.",
         group=CLIGroup.QA_NOTE,
     ),

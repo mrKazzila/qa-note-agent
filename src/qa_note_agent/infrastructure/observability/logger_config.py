@@ -9,7 +9,7 @@ __all__ = (
 
 import logging
 from dataclasses import dataclass
-from typing import Literal, Protocol, Self, final
+from typing import Literal, Protocol, final
 
 LogLevel = Literal[
     "DEBUG",
@@ -45,19 +45,10 @@ class LoggingConfig:
     enable_diagnostics: bool = False
     use_utc_timestamps: bool = False
 
-    @classmethod
-    def from_settings(cls, settings: HasLoggingSettings) -> Self:
-        return cls(
-            level=settings.log_level,
-            renderer=settings.log_renderer,
-            enable_diagnostics=settings.enable_log_diagnostics,
-            use_utc_timestamps=settings.use_utc_timestamps,
-        )
-
     def resolved_level(self) -> int:
         return self._get_log_level(self.level)
 
     @staticmethod
     def _get_log_level(level: str) -> int:
-        normalized = logging.getLevelName(level.upper())
-        return normalized if isinstance(normalized, int) else logging.INFO
+        mapping = logging.getLevelNamesMapping()
+        return mapping.get(level.upper(), logging.INFO)

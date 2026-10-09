@@ -5,15 +5,13 @@ __all__ = (
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any, Generic, TypeVar
+from typing import Annotated, Any
 
 import typer
 
-T = TypeVar("T")
-
 
 @dataclass(frozen=True, slots=True)
-class CLIOptionSpec(Generic[T]):
+class CLIOptionSpec[T]:
     annotation: Any
     default: T
 
