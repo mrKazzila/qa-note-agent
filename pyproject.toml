@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
 
 [project]
 name = "qa-note-agent"
@@ -22,7 +22,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.3",
+    "pytest==9.1.1",
     "ruff>=0.15.12",
     "ty>=0.0.34",
 ]
@@ -32,8 +32,10 @@ qa-note-agent = "qa_note_agent.entrypoints.cli.__main__:main"
 
 
 # ==========================
-# ========= PyTest =========
+# ========= Tools ===========
 # ==========================
+
+# ========= PyTest =========
 [tool.pytest.ini_options]
 addopts = "-v -ra --import-mode=importlib"
 testpaths = ["tests"]
@@ -42,9 +44,7 @@ strict_markers = true
 strict_config = true
 
 
-# ==========================
 # ========= Ruff ===========
-# ==========================
 [tool.ruff]
 respect-gitignore = true
 line-length = 79
@@ -75,6 +75,7 @@ select = [
     "G001",
 ]
 ignore = [
+    "COM812",  # Trailing commas are handled by the formatter.
     "ANN002",
     "ANN003",
     "ANN201",
@@ -104,17 +105,7 @@ docstring-quotes = "double"
 
 
 
-# ==========================
-# ====== setuptools ========
-# ==========================
-[tool.setuptools.packages.find]
-where = ["src"]
-
-
-
-# ==========================
 # ====== Ty ========
-# ==========================
 [tool.ty.terminal]
 output-format = "concise"
 error-on-warning = false
